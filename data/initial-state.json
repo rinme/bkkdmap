@@ -1,0 +1,218 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-08-24T10:00:00.000Z",
+  "districts": {
+    "pathum-wan": {
+      "isVisited": true,
+      "generalNotes": "Core shopping and culture hub of Bangkok. Easy BTS access to Siam interchange.",
+      "visitedPlaces": [
+        {
+          "id": "spot-pw-1",
+          "name": "CentralWorld",
+          "category": "Mall",
+          "visitedDate": "2026-08-15",
+          "notes": "Explored art exhibitions and food hall on the 7th floor."
+        },
+        {
+          "id": "spot-pw-2",
+          "name": "Bangkok Art and Culture Centre (BACC)",
+          "category": "Culture",
+          "visitedDate": "2026-08-16",
+          "notes": "Watched contemporary Thai photography and design showcases."
+        },
+        {
+          "id": "spot-pw-3",
+          "name": "Erawan Shrine",
+          "category": "Temple",
+          "visitedDate": "2026-08-18",
+          "notes": "Evening traditional Thai dance performance and prayer."
+        }
+      ]
+    },
+    "phra-nakhon": {
+      "isVisited": true,
+      "generalNotes": "Rattanakosin historic heart with palaces and riverside heritage.",
+      "visitedPlaces": [
+        {
+          "id": "spot-pn-1",
+          "name": "Wat Pho (Temple of the Reclining Buddha)",
+          "category": "Temple",
+          "visitedDate": "2026-07-20",
+          "notes": "Visited the massive gilded reclining Buddha and traditional massage school."
+        },
+        {
+          "id": "spot-pn-2",
+          "name": "Giant Swing (Sao Chingcha)",
+          "category": "Culture",
+          "visitedDate": "2026-07-20",
+          "notes": "Walked around the iconic red teak swing and had Mont Nom Sod toast."
+        }
+      ]
+    },
+    "bang-rak": {
+      "isVisited": true,
+      "generalNotes": "Historic creative district and Silom financial center.",
+      "visitedPlaces": [
+        {
+          "id": "spot-br-1",
+          "name": "King Power Mahanakhon Glass SkyWalk",
+          "category": "Landmark",
+          "visitedDate": "2026-08-01",
+          "notes": "Sunset 360-degree panorama of the entire Bangkok skyline from the 78th floor."
+        },
+        {
+          "id": "spot-br-2",
+          "name": "Charoen Krung Creative District (TCDC)",
+          "category": "Culture",
+          "visitedDate": "2026-08-05",
+          "notes": "Checked out galleries, boutique coffee shops, and warehouse art spaces."
+        }
+      ]
+    },
+    "chatuchak": {
+      "isVisited": true,
+      "generalNotes": "Famous weekend market hub and lush urban parks.",
+      "visitedPlaces": [
+        {
+          "id": "spot-cc-1",
+          "name": "Chatuchak Weekend Market (JJ Market)",
+          "category": "Market",
+          "visitedDate": "2026-08-10",
+          "notes": "Browsed vintage fashion, ceramics, and Thai iced tea in section 26."
+        },
+        {
+          "id": "spot-cc-2",
+          "name": "Vachirabenjatas Park (Rot Fai Park)",
+          "category": "Park",
+          "visitedDate": "2026-08-10",
+          "notes": "Rented a bicycle and visited the Butterfly Garden."
+        }
+      ]
+    },
+    "samphanthawong": {
+      "isVisited": true,
+      "generalNotes": "Chinatown street food mecca and historic trading alleys.",
+      "visitedPlaces": [
+        {
+          "id": "spot-sp-1",
+          "name": "Yaowarat Street Food Night Market",
+          "category": "Food",
+          "visitedDate": "2026-08-12",
+          "notes": "Tasted toasted buns, Guay Jub Ouan Pochana, and ginger desserts."
+        },
+        {
+          "id": "spot-sp-2",
+          "name": "Song Wat Road Hipster Alleys",
+          "category": "Cafe",
+          "visitedDate": "2026-08-12",
+          "notes": "Specialty cold brew coffee and preserved shophouse architecture."
+        }
+      ]
+    },
+    "khlong-san": {
+      "isVisited": true,
+      "generalNotes": "Thonburi riverside with luxury malls and art compounds.",
+      "visitedPlaces": [
+        {
+          "id": "spot-ks-1",
+          "name": "ICONSIAM & SookSiam Indoor Floating Market",
+          "category": "Mall",
+          "visitedDate": "2026-07-28",
+          "notes": "Explored regional Thai street food at SookSiam and riverside fountain show."
+        },
+        {
+          "id": "spot-ks-2",
+          "name": "The Jam Factory",
+          "category": "Culture",
+          "visitedDate": "2026-07-28",
+          "notes": "Bookshop, coffee by the Bodhi tree, and river sunset vista."
+        }
+      ]
+    },
+    "khlong-toei": {
+      "isVisited": true,
+      "generalNotes": "Modern lifestyle centers and the expansive Benjakitti Forest Park.",
+      "visitedPlaces": [
+        {
+          "id": "spot-kt-1",
+          "name": "Benjakitti Forest Park Skywalk",
+          "category": "Park",
+          "visitedDate": "2026-08-14",
+          "notes": "Jogged along the elevated wetland boardwalks overlooking Asok skyscrapers."
+        },
+        {
+          "id": "spot-kt-2",
+          "name": "EmSphere & IKEA Sukhumvit",
+          "category": "Mall",
+          "visitedDate": "2026-08-14",
+          "notes": "Dinner at the gourmet food floor and shopping."
+        }
+      ]
+    },
+    "watthana": {
+      "isVisited": true,
+      "generalNotes": "Thonglor and Ekkamai cafe culture and dynamic nightlife.",
+      "visitedPlaces": [
+        {
+          "id": "spot-wt-1",
+          "name": "The Commons Thonglor",
+          "category": "Cafe",
+          "visitedDate": "2026-08-17",
+          "notes": "Relaxed open-air courtyard brunch and matcha latte."
+        }
+      ]
+    },
+    "bangkok-noi": {
+      "isVisited": true,
+      "generalNotes": "Canalside historic Thonburi and Wang Lang food paradise.",
+      "visitedPlaces": [
+        {
+          "id": "spot-bn-1",
+          "name": "Wang Lang Pier Food Market",
+          "category": "Food",
+          "visitedDate": "2026-08-08",
+          "notes": "Crispy pork, Wang Lang stuffed bread, and southern Thai curry."
+        }
+      ]
+    },
+    "dusit": {
+      "isVisited": true,
+      "generalNotes": "Grand royal avenues and peaceful temples.",
+      "visitedPlaces": [
+        {
+          "id": "spot-ds-1",
+          "name": "Wat Benchamabophit (The Marble Temple)",
+          "category": "Temple",
+          "visitedDate": "2026-07-15",
+          "notes": "Italian Carrara marble architecture and peaceful ordination hall."
+        }
+      ]
+    },
+    "bang-khen": {
+      "isVisited": true,
+      "generalNotes": "Northern district with major temples and university grounds.",
+      "visitedPlaces": [
+        {
+          "id": "spot-bk-1",
+          "name": "Wat Phra Si Mahathat Wora Maha Vihan",
+          "category": "Temple",
+          "visitedDate": "2026-08-02",
+          "notes": "Visited the sacred stupa connected directly to BTS / MRT intersection."
+        }
+      ]
+    },
+    "don-mueang": {
+      "isVisited": true,
+      "generalNotes": "Bangkok's classic aviation hub.",
+      "visitedPlaces": [
+        {
+          "id": "spot-dm-1",
+          "name": "Royal Thai Air Force Museum",
+          "category": "Culture",
+          "visitedDate": "2026-06-25",
+          "notes": "Explored historic vintage aircraft and aviation history exhibits."
+        }
+      ]
+    }
+  }
+}
