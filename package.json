@@ -5,7 +5,8 @@
   "description": "Mobile-first production-ready web application to track visits and explored places across all 50 districts of Bangkok on an interactive map.",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "prebuild": "bun run scripts/prebuild.ts",
+    "build": "bun run scripts/prebuild.ts && next build",
     "start": "next start",
     "lint": "next lint",
     "bun:dev": "bun --bun next dev",
