@@ -14,6 +14,7 @@ import {
 export const mapDataset = rawData as unknown as MapDataset;
 
 export const bangkokDistrictsMeta: DistrictMeta[] = mapDataset.districts;
+export const bangkokDistricts: DistrictMeta[] = bangkokDistrictsMeta;
 
 export const bangkokZones = mapDataset.zones;
 

@@ -1,9 +1,13 @@
 import fs from 'fs';
 import path from 'path';
+import { unstable_cache } from 'next/cache';
+import { eq, desc } from 'drizzle-orm';
+import { getDb } from './db';
+import { districtStatuses, places } from './db/schema';
 import initialStateJson from '../data/initial-state.json';
+import { bangkokDistricts } from './districts-data';
 import { Place, DistrictUserData, TrackerState } from './types';
 
-const REDIS_KEY = 'bkk_tracker_state_v1';
 const STATE_FILE_PATH = path.join(process.cwd(), 'data', 'bangkok-tracker-state.json');
 
 // In-memory fallback singleton
@@ -13,89 +17,9 @@ function getInitialDefaultState(): TrackerState {
   return JSON.parse(JSON.stringify(initialStateJson)) as TrackerState;
 }
 
-// 1. Upstash Redis / Vercel KV REST adapter
-async function getFromRedis(): Promise<TrackerState | null> {
-  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
-
-  if (!url || !token) {
-    return null;
-  }
-
-  try {
-    const res = await fetch(`${url}/get/${REDIS_KEY}`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      },
-      cache: 'no-store'
-    });
-
-    if (!res.ok) return null;
-    const json = await res.json();
-    if (json.result) {
-      if (typeof json.result === 'string') {
-        return JSON.parse(json.result) as TrackerState;
-      }
-      return json.result as TrackerState;
-    }
-    return null;
-  } catch (err) {
-    console.error('Redis fetch error:', err);
-    return null;
-  }
-}
-
-async function saveToRedis(state: TrackerState): Promise<boolean> {
-  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
-
-  if (!url || !token) {
-    return false;
-  }
-
-  try {
-    const res = await fetch(`${url}/set/${REDIS_KEY}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(JSON.stringify(state))
-    });
-
-    return res.ok;
-  } catch (err) {
-    console.error('Redis save error:', err);
-    return false;
-  }
-}
-
-// 2. Supabase Storage Adapter (Optional)
-async function getFromSupabase(): Promise<TrackerState | null> {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_KEY;
-  if (!supabaseUrl || !supabaseKey) return null;
-
-  try {
-    const res = await fetch(`${supabaseUrl}/rest/v1/app_state?id=eq.${REDIS_KEY}&select=state_data`, {
-      headers: {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`
-      },
-      cache: 'no-store'
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data && data.length > 0 && data[0].state_data) {
-      return data[0].state_data as TrackerState;
-    }
-  } catch (err) {
-    console.error('Supabase fetch error:', err);
-  }
-  return null;
-}
-
-// 3. Local File System Adapter
+// ----------------------------------------------------
+// Local File Fallback Handlers
+// ----------------------------------------------------
 function getFromFile(): TrackerState | null {
   try {
     if (fs.existsSync(STATE_FILE_PATH)) {
@@ -103,7 +27,7 @@ function getFromFile(): TrackerState | null {
       return JSON.parse(raw) as TrackerState;
     }
   } catch (err) {
-    console.warn('File read warning (normal in serverless):', err);
+    console.warn('Local file read warning:', err);
   }
   return null;
 }
@@ -117,77 +41,170 @@ function saveToFile(state: TrackerState): boolean {
     fs.writeFileSync(STATE_FILE_PATH, JSON.stringify(state, null, 2), 'utf-8');
     return true;
   } catch (err) {
-    console.warn('File write warning (normal in serverless read-only FS):', err);
+    console.warn('Local file write warning:', err);
     return false;
   }
 }
 
-// Core Unified Methods
-export async function getTrackerState(): Promise<TrackerState> {
-  // 1. Try Redis/KV
-  const redisData = await getFromRedis();
-  if (redisData && redisData.districts) {
-    memoryStateCache = redisData;
-    return redisData;
-  }
+// ----------------------------------------------------
+// Postgres Core State Loader with Auto-Seed
+// ----------------------------------------------------
+async function fetchStateFromPostgres(): Promise<TrackerState | null> {
+  const db = getDb();
+  if (!db) return null;
 
-  // 2. Try Supabase
-  const supabaseData = await getFromSupabase();
-  if (supabaseData && supabaseData.districts) {
-    memoryStateCache = supabaseData;
-    return supabaseData;
-  }
+  try {
+    const allStatuses = await db.select().from(districtStatuses);
 
-  // 3. Try In-Memory Cache
-  if (memoryStateCache) {
-    return memoryStateCache;
-  }
+    // Auto-seed if database is empty
+    if (allStatuses.length === 0) {
+      console.log('⚡ Empty database detected. Auto-seeding initial district data...');
+      const defaultState = getInitialDefaultState();
+      for (const d of bangkokDistricts) {
+        const existing = defaultState.districts[d.id] || { isVisited: false, visitedPlaces: [] };
+        await db.insert(districtStatuses).values({
+          districtId: d.id,
+          isVisited: Boolean(existing.isVisited),
+          generalNotes: existing.generalNotes || null,
+        }).onConflictDoNothing();
 
-  // 4. Try Local File
-  const fileData = getFromFile();
-  if (fileData && fileData.districts) {
-    memoryStateCache = fileData;
-    return fileData;
-  }
+        for (const p of existing.visitedPlaces || []) {
+          await db.insert(places).values({
+            id: p.id,
+            districtId: d.id,
+            name: p.name,
+            category: p.category,
+            visitedDate: p.visitedDate,
+            notes: p.notes,
+          }).onConflictDoNothing();
+        }
+      }
+      return defaultState;
+    }
 
-  // 5. Default initial state
-  const fallback = getInitialDefaultState();
-  memoryStateCache = fallback;
-  saveToFile(fallback);
-  return fallback;
+    // Fetch all places
+    const allPlaces = await db.select().from(places).orderBy(desc(places.createdAt));
+
+    // Construct districts map
+    const districtsMap: Record<string, DistrictUserData> = {};
+
+    // Initialize all 50 districts
+    for (const d of bangkokDistricts) {
+      districtsMap[d.id] = {
+        isVisited: false,
+        visitedPlaces: [],
+      };
+    }
+
+    // Populate statuses
+    for (const status of allStatuses) {
+      if (districtsMap[status.districtId]) {
+        districtsMap[status.districtId].isVisited = status.isVisited;
+        if (status.generalNotes) {
+          districtsMap[status.districtId].generalNotes = status.generalNotes;
+        }
+      }
+    }
+
+    // Populate places
+    for (const p of allPlaces) {
+      if (districtsMap[p.districtId]) {
+        districtsMap[p.districtId].visitedPlaces.push({
+          id: p.id,
+          name: p.name,
+          category: p.category as any,
+          visitedDate: p.visitedDate || undefined,
+          notes: p.notes || undefined,
+        });
+      }
+    }
+
+    return {
+      version: '1.0.0',
+      districts: districtsMap,
+      lastUpdated: new Date().toISOString(),
+    };
+  } catch (err) {
+    console.error('Postgres state fetch error:', err);
+    return null;
+  }
 }
 
-export async function saveTrackerState(state: TrackerState): Promise<boolean> {
+// ----------------------------------------------------
+// Next.js Tagged Server Cache
+// ----------------------------------------------------
+const getCachedState = unstable_cache(
+  async () => {
+    // 1. Try Postgres
+    const pgData = await fetchStateFromPostgres();
+    if (pgData && pgData.districts) {
+      memoryStateCache = pgData;
+      return pgData;
+    }
+
+    // 2. Try In-Memory Cache
+    if (memoryStateCache) {
+      return memoryStateCache;
+    }
+
+    // 3. Try Local File
+    const fileData = getFromFile();
+    if (fileData && fileData.districts) {
+      memoryStateCache = fileData;
+      return fileData;
+    }
+
+    // 4. Default Fallback
+    const fallback = getInitialDefaultState();
+    memoryStateCache = fallback;
+    saveToFile(fallback);
+    return fallback;
+  },
+  ['tracker-state-cache-v2'],
+  { tags: ['districts-state'], revalidate: 3600 }
+);
+
+export async function getTrackerState(): Promise<TrackerState> {
+  return await getCachedState();
+}
+
+// ----------------------------------------------------
+// Mutation Handlers
+// ----------------------------------------------------
+export async function toggleDistrictVisited(districtId: string, visited?: boolean): Promise<TrackerState> {
+  const db = getDb();
+  const state = await getTrackerState();
+  const currentStatus = state.districts[districtId] || { isVisited: false, visitedPlaces: [] };
+  const newVisited = visited !== undefined ? visited : !currentStatus.isVisited;
+
+  if (db) {
+    try {
+      await db
+        .insert(districtStatuses)
+        .values({
+          districtId,
+          isVisited: newVisited,
+          updatedAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: districtStatuses.districtId,
+          set: {
+            isVisited: newVisited,
+            updatedAt: new Date(),
+          },
+        });
+    } catch (err) {
+      console.error('Postgres toggleDistrictVisited error:', err);
+    }
+  }
+
+  // Update in-memory & local fallback
+  currentStatus.isVisited = newVisited;
+  state.districts[districtId] = currentStatus;
   state.lastUpdated = new Date().toISOString();
   memoryStateCache = state;
+  saveToFile(state);
 
-  // Save to Redis if configured
-  const redisSaved = await saveToRedis(state);
-
-  // Always attempt local file save as well
-  const fileSaved = saveToFile(state);
-
-  return redisSaved || fileSaved || true;
-}
-
-export async function resetTrackerState(): Promise<TrackerState> {
-  const defaultState = getInitialDefaultState();
-  await saveTrackerState(defaultState);
-  return defaultState;
-}
-
-export async function toggleDistrictVisited(districtId: string, visited?: boolean): Promise<TrackerState> {
-  const state = await getTrackerState();
-  const districtData = state.districts[districtId] || {
-    isVisited: false,
-    visitedPlaces: []
-  };
-
-  const newVisited = visited !== undefined ? visited : !districtData.isVisited;
-  districtData.isVisited = newVisited;
-
-  state.districts[districtId] = districtData;
-  await saveTrackerState(state);
   return state;
 }
 
@@ -195,26 +212,57 @@ export async function addPlaceToDistrict(
   districtId: string,
   placeInput: Omit<Place, 'id'>
 ): Promise<{ state: TrackerState; place: Place }> {
+  const db = getDb();
   const state = await getTrackerState();
-  const districtData = state.districts[districtId] || {
-    isVisited: false,
-    visitedPlaces: []
-  };
+  const districtData = state.districts[districtId] || { isVisited: false, visitedPlaces: [] };
 
   const newPlace: Place = {
     id: `spot-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
     name: placeInput.name.trim(),
     category: placeInput.category || 'Other',
     visitedDate: placeInput.visitedDate || new Date().toISOString().split('T')[0],
-    notes: placeInput.notes?.trim() || ''
+    notes: placeInput.notes?.trim() || '',
   };
 
-  districtData.visitedPlaces = [newPlace, ...(districtData.visitedPlaces || [])];
-  // Auto-mark as visited
-  districtData.isVisited = true;
+  if (db) {
+    try {
+      // Ensure district status row exists & auto-mark visited
+      await db
+        .insert(districtStatuses)
+        .values({
+          districtId,
+          isVisited: true,
+          updatedAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: districtStatuses.districtId,
+          set: {
+            isVisited: true,
+            updatedAt: new Date(),
+          },
+        });
 
+      // Insert place row
+      await db.insert(places).values({
+        id: newPlace.id,
+        districtId,
+        name: newPlace.name,
+        category: newPlace.category,
+        visitedDate: newPlace.visitedDate,
+        notes: newPlace.notes,
+      });
+    } catch (err) {
+      console.error('Postgres addPlaceToDistrict error:', err);
+    }
+  }
+
+  // Update memory & local file
+  districtData.visitedPlaces = [newPlace, ...(districtData.visitedPlaces || [])];
+  districtData.isVisited = true;
   state.districts[districtId] = districtData;
-  await saveTrackerState(state);
+  state.lastUpdated = new Date().toISOString();
+  memoryStateCache = state;
+  saveToFile(state);
 
   return { state, place: newPlace };
 }
@@ -224,63 +272,161 @@ export async function updatePlaceInDistrict(
   placeId: string,
   placeData: Partial<Place>
 ): Promise<TrackerState> {
+  const db = getDb();
   const state = await getTrackerState();
   const districtData = state.districts[districtId];
-  if (!districtData || !districtData.visitedPlaces) {
-    return state;
-  }
 
-  districtData.visitedPlaces = districtData.visitedPlaces.map((p) => {
-    if (p.id === placeId) {
-      return {
-        ...p,
-        ...placeData,
-        name: placeData.name !== undefined ? placeData.name.trim() : p.name,
-        notes: placeData.notes !== undefined ? placeData.notes.trim() : p.notes
-      };
+  if (db) {
+    try {
+      await db
+        .update(places)
+        .set({
+          name: placeData.name !== undefined ? placeData.name.trim() : undefined,
+          category: placeData.category,
+          visitedDate: placeData.visitedDate,
+          notes: placeData.notes !== undefined ? placeData.notes.trim() : undefined,
+        })
+        .where(eq(places.id, placeId));
+    } catch (err) {
+      console.error('Postgres updatePlaceInDistrict error:', err);
     }
-    return p;
-  });
+  }
 
-  state.districts[districtId] = districtData;
-  await saveTrackerState(state);
+  if (districtData && districtData.visitedPlaces) {
+    districtData.visitedPlaces = districtData.visitedPlaces.map((p) => {
+      if (p.id === placeId) {
+        return {
+          ...p,
+          ...placeData,
+          name: placeData.name !== undefined ? placeData.name.trim() : p.name,
+          notes: placeData.notes !== undefined ? placeData.notes.trim() : p.notes,
+        };
+      }
+      return p;
+    });
+    state.districts[districtId] = districtData;
+    state.lastUpdated = new Date().toISOString();
+    memoryStateCache = state;
+    saveToFile(state);
+  }
+
   return state;
 }
 
-export async function deletePlaceFromDistrict(
-  districtId: string,
-  placeId: string
-): Promise<TrackerState> {
+export async function deletePlaceFromDistrict(districtId: string, placeId: string): Promise<TrackerState> {
+  const db = getDb();
   const state = await getTrackerState();
   const districtData = state.districts[districtId];
-  if (!districtData || !districtData.visitedPlaces) {
-    return state;
+
+  if (db) {
+    try {
+      await db.delete(places).where(eq(places.id, placeId));
+    } catch (err) {
+      console.error('Postgres deletePlaceFromDistrict error:', err);
+    }
   }
 
-  districtData.visitedPlaces = districtData.visitedPlaces.filter((p) => p.id !== placeId);
-  // If no places left, update isVisited according to remaining places
-  if (districtData.visitedPlaces.length === 0) {
-    // Keep isVisited true if user manually set it, or toggle off
-    districtData.isVisited = false;
+  if (districtData && districtData.visitedPlaces) {
+    districtData.visitedPlaces = districtData.visitedPlaces.filter((p) => p.id !== placeId);
+    if (districtData.visitedPlaces.length === 0) {
+      districtData.isVisited = false;
+      if (db) {
+        try {
+          await db
+            .update(districtStatuses)
+            .set({ isVisited: false, updatedAt: new Date() })
+            .where(eq(districtStatuses.districtId, districtId));
+        } catch (err) {
+          console.error('Postgres unvisit district error:', err);
+        }
+      }
+    }
+    state.districts[districtId] = districtData;
+    state.lastUpdated = new Date().toISOString();
+    memoryStateCache = state;
+    saveToFile(state);
   }
 
-  state.districts[districtId] = districtData;
-  await saveTrackerState(state);
   return state;
 }
 
-export async function updateDistrictNotes(
-  districtId: string,
-  notes: string
-): Promise<TrackerState> {
+export async function updateDistrictNotes(districtId: string, notes: string): Promise<TrackerState> {
+  const db = getDb();
   const state = await getTrackerState();
-  const districtData = state.districts[districtId] || {
-    isVisited: false,
-    visitedPlaces: []
-  };
+  const districtData = state.districts[districtId] || { isVisited: false, visitedPlaces: [] };
+
+  if (db) {
+    try {
+      await db
+        .insert(districtStatuses)
+        .values({
+          districtId,
+          generalNotes: notes,
+          updatedAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: districtStatuses.districtId,
+          set: {
+            generalNotes: notes,
+            updatedAt: new Date(),
+          },
+        });
+    } catch (err) {
+      console.error('Postgres updateDistrictNotes error:', err);
+    }
+  }
 
   districtData.generalNotes = notes;
   state.districts[districtId] = districtData;
-  await saveTrackerState(state);
+  state.lastUpdated = new Date().toISOString();
+  memoryStateCache = state;
+  saveToFile(state);
+
   return state;
 }
+
+export async function resetTrackerState(): Promise<TrackerState> {
+  const db = getDb();
+  const defaultState = getInitialDefaultState();
+
+  if (db) {
+    try {
+      await db.delete(places);
+      await db.delete(districtStatuses);
+      // Re-seed defaults
+      for (const d of bangkokDistricts) {
+        const existing = defaultState.districts[d.id] || { isVisited: false, visitedPlaces: [] };
+        await db.insert(districtStatuses).values({
+          districtId: d.id,
+          isVisited: Boolean(existing.isVisited),
+          generalNotes: existing.generalNotes || null,
+        });
+
+        for (const p of existing.visitedPlaces || []) {
+          await db.insert(places).values({
+            id: p.id,
+            districtId: d.id,
+            name: p.name,
+            category: p.category,
+            visitedDate: p.visitedDate,
+            notes: p.notes,
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Postgres reset error:', err);
+    }
+  }
+
+  memoryStateCache = defaultState;
+  saveToFile(defaultState);
+  return defaultState;
+}
+
+export async function saveTrackerState(state: TrackerState): Promise<boolean> {
+  state.lastUpdated = new Date().toISOString();
+  memoryStateCache = state;
+  saveToFile(state);
+  return true;
+}
+

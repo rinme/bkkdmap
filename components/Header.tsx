@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { TrackerStats, ViewMode } from '@/lib/types';
 import { ViewSwitcher } from './ViewSwitcher';
-import { Share2, Lock, Unlock, BarChart2, Compass, ShieldCheck } from 'lucide-react';
+import { Share2, Lock, Unlock, BarChart2, Compass, ShieldCheck, Sparkles, MapPin } from 'lucide-react';
 import { Button } from './ui/Button';
 
 interface HeaderProps {
@@ -25,26 +25,27 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout
 }) => {
   return (
-    <header className="sticky top-0 z-40 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-all pt-[env(safe-area-inset-top)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+    <header className="sticky top-0 z-40 w-full bg-[#060913]/85 backdrop-blur-xl border-b border-white/[0.07] shadow-xl transition-all pt-[env(safe-area-inset-top)]">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3">
         {/* Top Row: Title, Switcher, and Actions */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-2 sm:gap-3">
           {/* Brand */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform flex-shrink-0">
-              <Compass className="w-5 h-5" />
+          <Link href="/" className="flex items-center gap-2.5 group flex-shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-emerald-400 via-teal-500 to-emerald-600 flex items-center justify-center text-slate-950 shadow-md shadow-emerald-500/25 group-hover:scale-105 group-hover:shadow-emerald-500/40 transition-all duration-300 flex-shrink-0">
+              <Compass className="w-5 h-5 transition-transform group-hover:rotate-45 duration-500" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+                <h1 className="text-sm sm:text-base font-black text-white tracking-tight leading-none">
                   Bangkok 50
                 </h1>
-                <span className="text-xs px-1.5 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 font-extrabold border border-emerald-300 dark:border-emerald-800">
-                  {stats.explorerRank.badge} Lv.{stats.explorerRank.level}
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 font-extrabold border border-emerald-500/30 shadow-sm flex items-center gap-1">
+                  <span>{stats.explorerRank.badge}</span>
+                  <span>Lv.{stats.explorerRank.level}</span>
                 </span>
               </div>
-              <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 hidden sm:block">
-                สำรวจ 50 เขตกรุงเทพมหานคร
+              <p className="text-[10px] font-medium text-slate-400 hidden sm:block leading-tight mt-0.5">
+                สำรวจ 50 เขตกรุงเทพฯ
               </p>
             </div>
           </Link>
@@ -54,13 +55,13 @@ export const Header: React.FC<HeaderProps> = ({
             <ViewSwitcher currentView={currentView} onViewChange={onViewChange} />
           </div>
 
-          {/* Right Actions: Share, Stats, Admin */}
-          <div className="flex items-center gap-2">
+          {/* Right Actions: Share, Admin */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <button
               onClick={onOpenShareModal}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-md shadow-emerald-500/20 transition-all active:scale-95"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 text-xs font-bold shadow-md shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all active:scale-95 cursor-pointer"
             >
-              <Share2 className="w-4 h-4" />
+              <Share2 className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Share</span>
             </button>
 
@@ -68,16 +69,16 @@ export const Header: React.FC<HeaderProps> = ({
               <div className="flex items-center gap-1">
                 <Link
                   href="/admin"
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700 text-xs font-semibold"
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-amber-500/15 text-amber-300 border border-amber-500/30 text-xs font-bold"
                   title="Admin Dashboard Active"
                 >
-                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
                   <span className="hidden md:inline">Admin</span>
                 </Link>
                 {onLogout && (
                   <button
                     onClick={onLogout}
-                    className="p-1.5 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                    className="p-1.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 transition-colors cursor-pointer"
                     title="Logout"
                   >
                     <Unlock className="w-4 h-4" />
@@ -87,7 +88,7 @@ export const Header: React.FC<HeaderProps> = ({
             ) : (
               <Link
                 href="/admin"
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors"
                 title="Admin Login"
               >
                 <Lock className="w-4 h-4" />
@@ -97,30 +98,30 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Bottom Row: Sticky Progress Bar & Stats Pill */}
-        <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+        <div className="mt-2.5 pt-2 border-t border-white/[0.06]">
           <div className="flex items-center justify-between text-xs mb-1.5">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-900 dark:text-white">
-                Visited: <span className="text-emerald-600 dark:text-emerald-400">{stats.visitedDistricts}</span> / 50 Districts
+              <span className="font-bold text-white text-xs">
+                Visited: <span className="text-emerald-400 font-black tabular-nums">{stats.visitedDistricts}</span> / 50 Districts
               </span>
-              <span className="text-slate-400">({stats.visitedPercentage}%)</span>
+              <span className="text-[11px] font-semibold text-slate-400 tabular-nums">({stats.visitedPercentage}%)</span>
             </div>
 
             <div className="flex items-center gap-3">
               <button
                 onClick={onOpenStatsModal}
-                className="text-xs font-semibold text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 flex items-center gap-1 transition-colors"
+                className="text-xs font-semibold text-slate-400 hover:text-emerald-300 flex items-center gap-1.5 transition-colors cursor-pointer"
               >
-                <BarChart2 className="w-3.5 h-3.5" />
-                <span><b>{stats.totalPlaces}</b> Places Logged</span>
+                <BarChart2 className="w-3.5 h-3.5 text-emerald-400" />
+                <span><b className="text-white tabular-nums">{stats.totalPlaces}</b> Spots Logged</span>
               </button>
             </div>
           </div>
 
           {/* Smooth Progress Track */}
-          <div className="w-full h-2.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden p-0.5 border border-slate-200/60 dark:border-slate-700/60 shadow-inner">
+          <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden p-[1px] border border-white/[0.08] shadow-inner relative">
             <div
-              className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 rounded-full transition-all duration-700 ease-out shadow-sm"
+              className="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-400 rounded-full transition-all duration-700 ease-out shadow-glow-emerald"
               style={{ width: `${Math.max(stats.visitedPercentage, 2)}%` }}
             />
           </div>
@@ -129,3 +130,4 @@ export const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { bangkokDistrictsMeta, bangkokZones, mergeDistrictState, calculateTrackerStats } from '@/lib/districts-data';
 import {
   getTrackerState,
@@ -9,6 +10,8 @@ import {
   updateDistrictNotes
 } from '@/lib/storage';
 import { isAuthenticatedAdmin } from '@/lib/auth';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
@@ -94,6 +97,9 @@ export async function POST(req: NextRequest) {
       default:
         return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
     }
+
+    // Invalidate server cache tag instantly
+    revalidateTag('districts-state');
 
     const fullDistricts = mergeDistrictState(bangkokDistrictsMeta, updatedState);
     const stats = calculateTrackerStats(fullDistricts);

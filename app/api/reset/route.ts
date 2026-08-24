@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { resetTrackerState } from '@/lib/storage';
 import { isAuthenticatedAdmin } from '@/lib/auth';
 import { bangkokDistrictsMeta, mergeDistrictState, calculateTrackerStats } from '@/lib/districts-data';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST() {
   try {
@@ -11,6 +14,7 @@ export async function POST() {
     }
 
     const resetState = await resetTrackerState();
+    revalidateTag('districts-state');
     const fullDistricts = mergeDistrictState(bangkokDistrictsMeta, resetState);
     const stats = calculateTrackerStats(fullDistricts);
 

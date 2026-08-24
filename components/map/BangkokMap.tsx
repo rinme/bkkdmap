@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { FullDistrict, BangkokZone, FilterVisited } from '@/lib/types';
 import { mapDataset } from '@/lib/districts-data';
 import { MapControls } from './MapControls';
-import { CheckCircle2, Sparkles, Navigation2 } from 'lucide-react';
+import { CheckCircle2, Sparkles, Navigation2, MapPin, Eye } from 'lucide-react';
 
 interface BangkokMapProps {
   districts: FullDistrict[];
@@ -174,10 +174,12 @@ export const BangkokMap: React.FC<BangkokMapProps> = ({
     return true;
   };
 
+  const visitedCount = districts.filter((d) => d.isVisited).length;
+
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-[68vh] min-h-[480px] max-h-[750px] bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 rounded-3xl overflow-hidden shadow-2xl border border-slate-800 touch-none select-none"
+      className="relative w-full h-[65vh] min-h-[480px] max-h-[740px] bg-gradient-to-b from-[#0a0f1d] via-[#090d18] to-[#060913] rounded-3xl overflow-hidden shadow-2xl border border-white/[0.08] touch-none select-none"
       onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
@@ -187,13 +189,17 @@ export const BangkokMap: React.FC<BangkokMapProps> = ({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Background Grid Pattern */}
+      {/* Ambient Central Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/3 left-1/4 w-80 h-80 bg-sky-500/5 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Subtle Coordinate Grid Pattern */}
       <div
-        className="absolute inset-0 opacity-15 pointer-events-none"
+        className="absolute inset-0 opacity-20 pointer-events-none"
         style={{
           backgroundImage:
-            'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.2) 1px, transparent 0)',
-          backgroundSize: '24px 24px'
+            'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.18) 1px, transparent 0)',
+          backgroundSize: '28px 28px'
         }}
       />
 
@@ -212,13 +218,13 @@ export const BangkokMap: React.FC<BangkokMapProps> = ({
       />
 
       {/* Zone Quick Filter Pill Bar */}
-      <div className="absolute top-4 left-4 z-20 flex flex-wrap items-center gap-1.5 max-w-[calc(100%-80px)] pointer-events-auto">
+      <div className="absolute top-3.5 left-3.5 z-20 flex flex-wrap items-center gap-1.5 max-w-[calc(100%-90px)] pointer-events-auto">
         <button
           onClick={() => setCurrentZone(null)}
-          className={`px-2.5 py-1 text-xs rounded-full font-medium transition-all backdrop-blur-md ${
+          className={`px-3 py-1 text-xs rounded-full font-bold transition-all duration-200 backdrop-blur-md cursor-pointer ${
             currentZone === null
-              ? 'bg-emerald-500 text-white shadow-md'
-              : 'bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 border border-slate-700'
+              ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/30'
+              : 'bg-[#0f172a]/80 hover:bg-[#1e293b]/80 text-slate-300 border border-white/[0.08]'
           }`}
         >
           All 50 Districts
@@ -227,10 +233,10 @@ export const BangkokMap: React.FC<BangkokMapProps> = ({
           <button
             key={zone.id}
             onClick={() => setCurrentZone(currentZone === zone.id ? null : zone.id)}
-            className={`px-2 py-0.5 text-xs rounded-full font-medium transition-all backdrop-blur-md border ${
+            className={`px-2.5 py-0.5 text-xs rounded-full font-semibold transition-all duration-200 backdrop-blur-md border cursor-pointer ${
               currentZone === zone.id
                 ? 'bg-white text-slate-950 font-bold shadow-md border-white'
-                : 'bg-slate-800/70 hover:bg-slate-700/70 text-slate-300 border-slate-700/60'
+                : 'bg-[#0f172a]/70 hover:bg-[#1e293b]/70 text-slate-300 border-white/[0.06]'
             }`}
           >
             <span
@@ -252,27 +258,34 @@ export const BangkokMap: React.FC<BangkokMapProps> = ({
         }}
       >
         <defs>
-          {/* Subtle Glow Filter for Selected District */}
-          <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
+          {/* Selected District Glow */}
+          <filter id="selectedGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="5" result="blur" />
             <feComposite in="SourceGraphic" in2="blur" operator="over" />
           </filter>
 
           {/* Chao Phraya River Gradient */}
           <linearGradient id="riverGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.85" />
-            <stop offset="50%" stopColor="#0284c7" stopOpacity="0.95" />
-            <stop offset="100%" stopColor="#0369a1" stopOpacity="0.85" />
+            <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#0284c7" stopOpacity="1" />
+            <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.9" />
           </linearGradient>
 
-          {/* Visited District Vibrant Green Gradient */}
-          <linearGradient id="visitedGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#4ade80" />
-            <stop offset="100%" stopColor="#16a34a" />
+          {/* Visited District Vibrant Emerald Gradient */}
+          <linearGradient id="visitedDistrictGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#34d399" />
+            <stop offset="60%" stopColor="#10b981" />
+            <stop offset="100%" stopColor="#059669" />
+          </linearGradient>
+
+          {/* Visited District Hover Gradient */}
+          <linearGradient id="visitedHoverGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#6ee7b7" />
+            <stop offset="100%" stopColor="#10b981" />
           </linearGradient>
 
           {/* Active Highlight Gradient */}
-          <linearGradient id="activeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="activeDistrictGradient" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#60a5fa" />
             <stop offset="100%" stopColor="#2563eb" />
           </linearGradient>
@@ -286,8 +299,8 @@ export const BangkokMap: React.FC<BangkokMapProps> = ({
             const isMatch = isDistrictMatchingSearch(district);
             const isVisible = isDistrictVisible(district);
 
-            let fill = district.isVisited ? 'url(#visitedGradient)' : '#1e293b';
-            let stroke = district.isVisited ? '#86efac' : '#334155';
+            let fill = district.isVisited ? 'url(#visitedDistrictGradient)' : '#141c2e';
+            let stroke = district.isVisited ? '#6ee7b7' : '#2d3b55';
             let strokeWidth = 1.2;
             let opacity = 1;
 
@@ -296,13 +309,18 @@ export const BangkokMap: React.FC<BangkokMapProps> = ({
             }
 
             if (isSelected) {
-              fill = 'url(#activeGradient)';
+              fill = 'url(#activeDistrictGradient)';
               stroke = '#93c5fd';
-              strokeWidth = 2.8;
+              strokeWidth = 3;
               opacity = 1;
             } else if (isHovered) {
+              if (district.isVisited) {
+                fill = 'url(#visitedHoverGradient)';
+              } else {
+                fill = '#1f2b45';
+              }
               stroke = '#ffffff';
-              strokeWidth = 2.2;
+              strokeWidth = 2.4;
               opacity = 1;
             }
 
@@ -316,7 +334,7 @@ export const BangkokMap: React.FC<BangkokMapProps> = ({
                 strokeLinejoin="round"
                 opacity={opacity}
                 className="transition-all duration-150 cursor-pointer"
-                filter={isSelected ? 'url(#glow)' : undefined}
+                filter={isSelected ? 'url(#selectedGlow)' : undefined}
                 onClick={(e) => {
                   e.stopPropagation();
                   onSelectDistrict(district);
@@ -333,10 +351,10 @@ export const BangkokMap: React.FC<BangkokMapProps> = ({
           d={mapDataset.chaoPhrayaRiverSvgPath}
           fill="none"
           stroke="url(#riverGradient)"
-          strokeWidth="14"
+          strokeWidth="15"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="pointer-events-none opacity-80"
+          className="pointer-events-none opacity-85"
         />
 
         {/* 3. Visited Landmark Markers & Centroid Pins */}
@@ -353,9 +371,9 @@ export const BangkokMap: React.FC<BangkokMapProps> = ({
                 {/* Visited District Pulse Animation */}
                 {district.isVisited && (
                   <circle
-                    r="9"
-                    fill="#22c55e"
-                    opacity="0.3"
+                    r="8"
+                    fill="#10b981"
+                    opacity="0.35"
                     className="animate-ping"
                   />
                 )}
@@ -363,7 +381,7 @@ export const BangkokMap: React.FC<BangkokMapProps> = ({
                 {/* Pin Core */}
                 <circle
                   r={isSelected ? 6.5 : district.isVisited ? 4.5 : 2.5}
-                  fill={isSelected ? '#60a5fa' : district.isVisited ? '#22c55e' : '#64748b'}
+                  fill={isSelected ? '#60a5fa' : district.isVisited ? '#10b981' : '#64748b'}
                   stroke="#ffffff"
                   strokeWidth={isSelected ? 2 : 1}
                 />
@@ -371,12 +389,12 @@ export const BangkokMap: React.FC<BangkokMapProps> = ({
                 {/* Spot Count Badge for Multiple Places */}
                 {district.placeCount > 0 && scale >= 1.2 && (
                   <g transform="translate(6, -6)">
-                    <circle r="6" fill="#0f172a" stroke="#22c55e" strokeWidth="1" />
+                    <circle r="6" fill="#060913" stroke="#10b981" strokeWidth="1.2" />
                     <text
                       textAnchor="middle"
                       dy="2.5"
-                      fill="#22c55e"
-                      fontSize="7"
+                      fill="#34d399"
+                      fontSize="7.5"
                       fontWeight="bold"
                     >
                       {district.placeCount}
@@ -389,10 +407,10 @@ export const BangkokMap: React.FC<BangkokMapProps> = ({
                   <text
                     y={district.isVisited ? 12 : 9}
                     textAnchor="middle"
-                    fill={district.isVisited ? '#bbf7d0' : '#94a3b8'}
+                    fill={district.isVisited ? '#a7f3d0' : '#94a3b8'}
                     fontSize={Math.max(7.5, 10 / Math.sqrt(scale))}
                     fontWeight={district.isVisited || isSelected ? '700' : '500'}
-                    className="drop-shadow-md select-none"
+                    className="drop-shadow-md select-none font-sans"
                   >
                     {district.nameTh}
                   </text>
@@ -406,59 +424,61 @@ export const BangkokMap: React.FC<BangkokMapProps> = ({
       {/* Floating Hover Tooltip */}
       {hoveredDistrict && !isDragging && (
         <div
-          className="absolute z-30 pointer-events-none transform -translate-x-1/2 -translate-y-full -mt-3 bg-slate-900/95 text-white text-xs rounded-2xl p-3 shadow-2xl border border-slate-700/80 backdrop-blur-md w-56 animate-fade-in"
+          className="absolute z-30 pointer-events-none transform -translate-x-1/2 -translate-y-full -mt-3 glass-panel text-white text-xs rounded-2xl p-3.5 shadow-2xl border border-white/[0.12] backdrop-blur-xl w-60 animate-fade-in"
           style={{
-            left: Math.max(120, Math.min(tooltipPos.x, (containerRef.current?.clientWidth || 300) - 120)),
-            top: Math.max(60, tooltipPos.y)
+            left: Math.max(130, Math.min(tooltipPos.x, (containerRef.current?.clientWidth || 300) - 130)),
+            top: Math.max(65, tooltipPos.y)
           }}
         >
-          <div className="flex items-center justify-between gap-1 mb-1">
-            <span className="font-bold text-sm text-slate-100">
+          <div className="flex items-center justify-between gap-1.5 mb-1">
+            <span className="font-extrabold text-sm text-white tracking-tight">
               {hoveredDistrict.nameEn}
             </span>
             <span
               className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                 hoveredDistrict.isVisited
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
                   : 'bg-slate-800 text-slate-400 border border-slate-700'
               }`}
             >
-              {hoveredDistrict.isVisited ? 'Visited' : 'Unvisited'}
+              {hoveredDistrict.isVisited ? '✓ Visited' : 'Unvisited'}
             </span>
           </div>
-          <div className="text-[11px] text-slate-400 mb-1.5 flex items-center justify-between">
-            <span>{hoveredDistrict.nameTh}</span>
-            <span className="text-[10px] text-slate-500">{hoveredDistrict.zoneTh}</span>
+          <div className="text-[11px] text-slate-400 mb-2 flex items-center justify-between">
+            <span className="font-medium">เขต{hoveredDistrict.nameTh}</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.06] text-slate-300">{hoveredDistrict.zoneTh}</span>
           </div>
 
-          <div className="border-t border-slate-800/80 pt-1.5 flex items-center justify-between text-[11px]">
-            <span className="text-emerald-400 font-medium">
-              📍 {hoveredDistrict.placeCount} spot{hoveredDistrict.placeCount !== 1 ? 's' : ''} logged
+          <div className="border-t border-white/[0.08] pt-2 flex items-center justify-between text-[11px]">
+            <span className="text-emerald-400 font-semibold flex items-center gap-1">
+              <span>📍</span>
+              <span className="tabular-nums">{hoveredDistrict.placeCount} spot{hoveredDistrict.placeCount !== 1 ? 's' : ''}</span> logged
             </span>
-            <span className="text-slate-400 text-[10px]">
-              Tap to view →
+            <span className="text-slate-400 text-[10px] font-medium">
+              Tap to inspect →
             </span>
           </div>
         </div>
       )}
 
       {/* Map Legend (Bottom-Left) */}
-      <div className="absolute bottom-4 left-4 z-20 flex items-center gap-3 bg-slate-900/85 backdrop-blur-md rounded-2xl px-3.5 py-2 border border-slate-800/80 text-xs text-slate-300 shadow-lg pointer-events-auto">
+      <div className="absolute bottom-3.5 left-3.5 z-20 flex items-center gap-3 bg-[#0d1424]/90 backdrop-blur-md rounded-2xl px-3.5 py-2 border border-white/[0.08] text-xs text-slate-300 shadow-xl pointer-events-auto">
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm inline-block" />
-          <span className="font-medium text-emerald-400">Visited ({districts.filter((d) => d.isVisited).length})</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-glow-emerald inline-block" />
+          <span className="font-bold text-emerald-400 tabular-nums">Visited ({visitedCount})</span>
         </div>
         <div className="w-px h-3.5 bg-slate-700" />
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-full bg-slate-700 border border-slate-600 inline-block" />
-          <span className="text-slate-400">Unvisited ({districts.filter((d) => !d.isVisited).length})</span>
+          <span className="w-2.5 h-2.5 rounded-full bg-slate-600 border border-slate-500 inline-block" />
+          <span className="text-slate-400 tabular-nums">Unvisited ({districts.length - visitedCount})</span>
         </div>
         <div className="w-px h-3.5 bg-slate-700 hidden sm:block" />
-        <div className="hidden sm:flex items-center gap-1 text-[11px] text-sky-400">
-          <span className="w-4 h-1.5 rounded-full bg-sky-500 inline-block" />
+        <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-sky-400 font-medium">
+          <span className="w-3.5 h-1.5 rounded-full bg-sky-400 inline-block" />
           <span>Chao Phraya River</span>
         </div>
       </div>
     </div>
   );
 };
+

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { FullDistrict, BangkokZone, FilterVisited } from '@/lib/types';
 import { DistrictCard } from './DistrictCard';
-import { Search, SlidersHorizontal, CheckCircle2, ArrowUpDown, X } from 'lucide-react';
+import { Search, SlidersHorizontal, CheckCircle2, ArrowUpDown, X, MapPin } from 'lucide-react';
 import { bangkokZones } from '@/lib/districts-data';
 
 interface DistrictListViewProps {
@@ -66,7 +66,7 @@ export const DistrictListView: React.FC<DistrictListViewProps> = ({
   return (
     <div className="w-full space-y-4">
       {/* Search and Filters Bar */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+      <div className="glass-panel rounded-3xl p-4 sm:p-5 border border-white/[0.08] shadow-xl space-y-3.5 bg-[#0c1322]/90">
         {/* Search Input */}
         <div className="relative">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -74,13 +74,13 @@ export const DistrictListView: React.FC<DistrictListViewProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search district (e.g. Siam, Phra Nakhon, ปทุมวัน) or spot..."
-            className="w-full pl-10 pr-9 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+            placeholder="Search 50 districts (e.g. Siam, Phra Nakhon, ปทุมวัน) or spot..."
+            className="w-full pl-10 pr-9 py-2.5 bg-[#060913]/80 border border-white/[0.08] rounded-2xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/80 transition-all shadow-inner"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -88,38 +88,38 @@ export const DistrictListView: React.FC<DistrictListViewProps> = ({
         </div>
 
         {/* Filter Tabs & Sort Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1">
+        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-0.5">
           {/* Visited Filter Segmented Tabs */}
-          <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
+          <div className="flex items-center bg-[#060913]/90 rounded-2xl p-1 text-xs font-bold text-slate-400 border border-white/[0.06]">
             <button
               onClick={() => setFilterVisited('all')}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
+              className={`px-3 py-1.5 rounded-xl transition-all duration-200 cursor-pointer ${
                 filterVisited === 'all'
-                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
-                  : 'hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-slate-800 text-white shadow-sm'
+                  : 'hover:text-white hover:bg-white/[0.04]'
               }`}
             >
-              All ({districts.length})
+              All <span className="text-[10px] opacity-70 tabular-nums">({districts.length})</span>
             </button>
             <button
               onClick={() => setFilterVisited('visited')}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
+              className={`px-3 py-1.5 rounded-xl transition-all duration-200 cursor-pointer ${
                 filterVisited === 'visited'
-                  ? 'bg-emerald-500 text-white shadow-sm'
-                  : 'hover:text-emerald-600 dark:hover:text-emerald-400'
+                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/25 font-bold'
+                  : 'hover:text-emerald-300 hover:bg-white/[0.04]'
               }`}
             >
-              Visited ({visitedCount})
+              Visited <span className="text-[10px] opacity-80 tabular-nums">({visitedCount})</span>
             </button>
             <button
               onClick={() => setFilterVisited('unvisited')}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
+              className={`px-3 py-1.5 rounded-xl transition-all duration-200 cursor-pointer ${
                 filterVisited === 'unvisited'
                   ? 'bg-slate-700 text-white shadow-sm'
-                  : 'hover:text-slate-900 dark:hover:text-white'
+                  : 'hover:text-white hover:bg-white/[0.04]'
               }`}
             >
-              Unvisited ({unvisitedCount})
+              Unvisited <span className="text-[10px] opacity-70 tabular-nums">({unvisitedCount})</span>
             </button>
           </div>
 
@@ -129,7 +129,7 @@ export const DistrictListView: React.FC<DistrictListViewProps> = ({
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="bg-slate-100 dark:bg-slate-800 border-none rounded-xl px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500"
+              className="bg-[#060913] border border-white/[0.08] rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
             >
               <option value="nameAsc">Name (A → Z)</option>
               <option value="placesDesc">Most Spots Visited</option>
@@ -142,10 +142,10 @@ export const DistrictListView: React.FC<DistrictListViewProps> = ({
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar pt-1">
           <button
             onClick={() => setSelectedZone(null)}
-            className={`px-3 py-1 text-xs rounded-full font-medium whitespace-nowrap transition-all ${
+            className={`px-3 py-1 text-xs rounded-full font-bold whitespace-nowrap transition-all duration-200 cursor-pointer ${
               selectedZone === null
-                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/25'
+                : 'bg-[#060913] text-slate-400 border border-white/[0.06] hover:text-white hover:border-white/[0.12]'
             }`}
           >
             All Zones
@@ -154,10 +154,10 @@ export const DistrictListView: React.FC<DistrictListViewProps> = ({
             <button
               key={z.id}
               onClick={() => setSelectedZone(selectedZone === z.id ? null : z.id)}
-              className={`px-3 py-1 text-xs rounded-full font-medium whitespace-nowrap transition-all border ${
+              className={`px-3 py-1 text-xs rounded-full font-medium whitespace-nowrap transition-all duration-200 border cursor-pointer ${
                 selectedZone === z.id
-                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-400 font-bold shadow-sm'
-                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                  ? 'bg-white text-slate-950 font-bold shadow-md border-white'
+                  : 'bg-[#060913]/70 text-slate-400 border-white/[0.06] hover:border-white/[0.15] hover:text-white'
               }`}
             >
               <span
@@ -171,14 +171,14 @@ export const DistrictListView: React.FC<DistrictListViewProps> = ({
       </div>
 
       {/* Results Header */}
-      <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
+      <div className="flex items-center justify-between text-xs text-slate-400 px-1">
         <span>
-          Showing <b>{filteredDistricts.length}</b> of {districts.length} districts
+          Showing <b className="text-white tabular-nums">{filteredDistricts.length}</b> of {districts.length} districts
         </span>
         {searchQuery && (
           <button
             onClick={() => setSearchQuery('')}
-            className="text-emerald-600 dark:text-emerald-400 font-medium hover:underline"
+            className="text-emerald-400 font-semibold hover:underline cursor-pointer"
           >
             Clear Search
           </button>
@@ -187,13 +187,13 @@ export const DistrictListView: React.FC<DistrictListViewProps> = ({
 
       {/* District Cards Grid */}
       {filteredDistricts.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-slate-200 dark:border-slate-800">
-          <Search className="w-10 h-10 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-          <h4 className="text-base font-bold text-slate-800 dark:text-slate-200">
+        <div className="glass-panel rounded-3xl p-12 text-center border border-white/[0.08] bg-[#0c1322]/80">
+          <Search className="w-10 h-10 mx-auto text-slate-500 mb-3" />
+          <h4 className="text-base font-bold text-white">
             No districts match your filter
           </h4>
-          <p className="text-xs text-slate-500 mt-1">
-            Try adjusting your search keywords or switching filters.
+          <p className="text-xs text-slate-400 mt-1">
+            Try adjusting your search keywords or switching zone/visited filters.
           </p>
         </div>
       ) : (
@@ -213,3 +213,4 @@ export const DistrictListView: React.FC<DistrictListViewProps> = ({
     </div>
   );
 };
+

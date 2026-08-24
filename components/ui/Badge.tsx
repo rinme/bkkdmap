@@ -14,19 +14,19 @@ export const Badge: React.FC<BadgeProps> = ({
   style,
   ...props
 }) => {
-  const baseClasses = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors';
+  const baseClasses = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-tight transition-all';
 
   const variantMap = {
-    default: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200',
-    success: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800',
-    warning: 'bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-200 dark:border-amber-800',
-    secondary: 'bg-blue-100 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border border-blue-200 dark:border-blue-800',
-    outline: 'border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300',
+    default: 'bg-slate-800/80 text-slate-300 border border-white/[0.08]',
+    success: 'bg-emerald-950/70 text-emerald-300 border border-emerald-500/30 shadow-sm',
+    warning: 'bg-amber-950/70 text-amber-300 border border-amber-500/30 shadow-sm',
+    secondary: 'bg-sky-950/70 text-sky-300 border border-sky-500/30 shadow-sm',
+    outline: 'border border-slate-700/80 text-slate-400 bg-transparent',
     zone: 'text-white shadow-sm'
   };
 
   const customStyle = colorHex
-    ? { backgroundColor: `${colorHex}20`, color: colorHex, borderColor: `${colorHex}50`, ...style }
+    ? { backgroundColor: `${colorHex}18`, color: colorHex, borderColor: `${colorHex}45`, ...style }
     : style;
 
   return (
@@ -39,3 +39,4 @@ export const Badge: React.FC<BadgeProps> = ({
     </span>
   );
 };
+

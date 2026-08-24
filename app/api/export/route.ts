@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getTrackerState } from '@/lib/storage';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const state = await getTrackerState();

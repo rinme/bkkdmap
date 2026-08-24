@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { TrackerStats, FullDistrict } from '@/lib/types';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
-import { Download, Share2, Copy, Check, Sparkles, Trophy, MapPin } from 'lucide-react';
+import { Download, Share2, Copy, Check, Sparkles, Trophy, MapPin, Award } from 'lucide-react';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -26,7 +26,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     .flatMap((d) => d.visitedPlaces)
     .slice(0, 8);
 
-  const shareText = `🏛️ My Bangkok 50 Districts Tracker Progress:\n\n✨ Visited: ${stats.visitedDistricts}/50 Districts (${stats.visitedPercentage}%)\n📍 Total Places Logged: ${stats.totalPlaces} spots\n🏆 Rank: ${stats.explorerRank.badge} ${stats.explorerRank.titleEn} (${stats.explorerRank.titleTh})\n\nTrack your own Bangkok adventures! #Bangkok50Districts`;
+  const shareText = `🏛️ Bangkok 50 Districts Exploration Passport:\n\n✨ Conquered: ${stats.visitedDistricts}/50 Districts (${stats.visitedPercentage}%)\n📍 Total Places Logged: ${stats.totalPlaces} spots\n🏆 Status: ${stats.explorerRank.badge} ${stats.explorerRank.titleEn} (${stats.explorerRank.titleTh})\n\nTrack your own Bangkok adventures! #Bangkok50Districts`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(`${shareText}\n${window.location.href}`);
@@ -50,7 +50,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     }
   };
 
-  // High Quality HTML5 Canvas Card Generation
+  // High Quality 1200x675 Canvas Card Generation
   const handleDownloadCard = () => {
     setIsGenerating(true);
     try {
@@ -66,124 +66,125 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 
       // 1. Background Gradient
       const bgGrad = ctx.createLinearGradient(0, 0, 1200, 675);
-      bgGrad.addColorStop(0, '#090d16');
-      bgGrad.addColorStop(0.5, '#0f172a');
-      bgGrad.addColorStop(1, '#064e3b');
+      bgGrad.addColorStop(0, '#060913');
+      bgGrad.addColorStop(0.5, '#0b1324');
+      bgGrad.addColorStop(1, '#052e25');
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, 1200, 675);
 
-      // Subtle grid dots
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-      for (let x = 30; x < 1200; x += 40) {
-        for (let y = 30; y < 675; y += 40) {
+      // Subtle Coordinate Dots
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.06)';
+      for (let x = 30; x < 1200; x += 36) {
+        for (let y = 30; y < 675; y += 36) {
           ctx.beginPath();
-          ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+          ctx.arc(x, y, 1.2, 0, Math.PI * 2);
           ctx.fill();
         }
       }
 
-      // 2. Header Title
+      // 2. Header Subtitle & Title
       ctx.fillStyle = '#10b981';
-      ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText('BANGKOK 50 DISTRICTS EXPLORATION PASSPORT', 70, 80);
+      ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('BANGKOK 50 DISTRICTS EXPLORER PASSPORT', 70, 75);
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = '900 52px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-      ctx.fillText('บันทึกการเดินทาง 50 เขตกรุงเทพฯ', 70, 145);
+      ctx.font = '900 48px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      ctx.fillText('บันทึกการเดินทาง 50 เขตกรุงเทพฯ', 70, 135);
 
       // 3. Stats Highlight Box
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
-      ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.35)';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.roundRect(70, 185, 1060, 220, 24);
+      ctx.roundRect(70, 175, 1060, 230, 24);
       ctx.fill();
       ctx.stroke();
 
-      // Visited Stat
+      // Column 1: Visited Districts
       ctx.fillStyle = '#94a3b8';
-      ctx.font = '600 20px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillText('DISTRICTS VISITED', 110, 240);
+      ctx.font = '700 16px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillText('DISTRICTS CONQUERED', 110, 225);
 
       ctx.fillStyle = '#34d399';
-      ctx.font = '900 64px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillText(`${stats.visitedDistricts} `, 110, 315);
+      ctx.font = '900 68px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillText(`${stats.visitedDistricts}`, 110, 305);
       ctx.fillStyle = '#94a3b8';
-      ctx.font = 'bold 36px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillText(`/ 50 (${stats.visitedPercentage}%)`, 210, 310);
+      ctx.font = 'bold 32px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillText(`/ 50 (${stats.visitedPercentage}%)`, 210, 300);
 
-      // Total Places Stat
+      // Column 2: Logged Spots
       ctx.fillStyle = '#94a3b8';
-      ctx.font = '600 20px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillText('SPOTS & LANDMARKS', 520, 240);
+      ctx.font = '700 16px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillText('TOTAL PLACES LOGGED', 510, 225);
 
       ctx.fillStyle = '#38bdf8';
-      ctx.font = '900 64px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillText(`${stats.totalPlaces}`, 520, 315);
+      ctx.font = '900 68px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillText(`${stats.totalPlaces}`, 510, 305);
       ctx.fillStyle = '#94a3b8';
       ctx.font = 'bold 24px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillText('places logged', 620, 310);
+      ctx.fillText('spots visited', 615, 300);
 
-      // Explorer Rank
+      // Column 3: Explorer Status
       ctx.fillStyle = '#94a3b8';
-      ctx.font = '600 20px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillText('EXPLORER STATUS', 840, 240);
+      ctx.font = '700 16px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillText('EXPLORER STATUS', 830, 225);
 
       ctx.fillStyle = '#fbbf24';
-      ctx.font = '900 32px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillText(`${stats.explorerRank.badge} Lv.${stats.explorerRank.level}`, 840, 290);
+      ctx.font = '900 28px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillText(`${stats.explorerRank.badge} Level ${stats.explorerRank.level}`, 830, 275);
       ctx.fillStyle = '#ffffff';
-      ctx.font = '600 20px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillText(`${stats.explorerRank.titleEn}`, 840, 325);
+      ctx.font = '700 20px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillText(`${stats.explorerRank.titleEn}`, 830, 310);
 
       // Progress Bar on Canvas
-      ctx.fillStyle = '#1e293b';
+      ctx.fillStyle = '#0f172a';
       ctx.beginPath();
-      ctx.roundRect(110, 350, 980, 20, 10);
+      ctx.roundRect(110, 350, 980, 22, 11);
       ctx.fill();
 
       const fillGrad = ctx.createLinearGradient(110, 0, 1090, 0);
       fillGrad.addColorStop(0, '#10b981');
+      fillGrad.addColorStop(0.5, '#14b8a6');
       fillGrad.addColorStop(1, '#06b6d4');
       ctx.fillStyle = fillGrad;
       ctx.beginPath();
-      ctx.roundRect(110, 350, Math.max(20, (stats.visitedPercentage / 100) * 980), 20, 10);
+      ctx.roundRect(110, 350, Math.max(24, (stats.visitedPercentage / 100) * 980), 22, 11);
       ctx.fill();
 
       // 4. Highlighted Spots Row
       ctx.fillStyle = '#94a3b8';
-      ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, sans-serif';
-      ctx.fillText('HIGHLIGHT EXPLORED SPOTS', 70, 450);
+      ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillText('HIGHLIGHT EXPLORED SPOTS', 70, 455);
 
       let curX = 70;
       let curY = 480;
-      topSpots.slice(0, 6).forEach((spot) => {
+      topSpots.slice(0, 7).forEach((spot) => {
         const tagText = `📍 ${spot.name}`;
-        ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, sans-serif';
         const tagWidth = ctx.measureText(tagText).width + 36;
 
         if (curX + tagWidth > 1130) {
           curX = 70;
-          curY += 48;
+          curY += 46;
         }
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.roundRect(curX, curY, tagWidth, 38, 12);
+        ctx.roundRect(curX, curY, tagWidth, 36, 12);
         ctx.fill();
         ctx.stroke();
 
-        ctx.fillStyle = '#e2e8f0';
-        ctx.fillText(tagText, curX + 18, curY + 25);
+        ctx.fillStyle = '#f1f5f9';
+        ctx.fillText(tagText, curX + 18, curY + 24);
 
-        curX += tagWidth + 14;
+        curX += tagWidth + 12;
       });
 
       // 5. Footer Signature
       ctx.fillStyle = '#64748b';
-      ctx.font = '16px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.font = '14px -apple-system, BlinkMacSystemFont, sans-serif';
       ctx.fillText('Bangkok 50 Districts Interactive Tracker • Built with Bun & Next.js', 70, 630);
       ctx.fillText('Generated on ' + new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }), 880, 630);
 
@@ -193,7 +194,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
       link.href = canvas.toDataURL('image/png');
       link.click();
     } catch (err) {
-      console.error('Error rendering card:', err);
+      console.error('Error rendering passport card:', err);
     } finally {
       setIsGenerating(false);
     }
@@ -203,19 +204,19 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Share Exploration Snapshot"
-      description="Showcase your journey and places explored across Bangkok's 50 districts"
+      title="Share Exploration Passport"
+      description="Showcase your journey, landmarks logged, and ranking across Bangkok's 50 districts"
       maxWidth="lg"
     >
       <div className="space-y-4 pt-2">
         {/* Visual Snapshot Card Preview */}
         <div
           ref={cardRef}
-          className="relative bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950 rounded-3xl p-6 text-white border border-emerald-900/60 shadow-2xl overflow-hidden"
+          className="relative bg-gradient-to-br from-[#0c1824] via-[#09121d] to-[#052820] rounded-3xl p-6 text-white border border-emerald-500/30 shadow-2xl overflow-hidden"
         >
           {/* Background Glow */}
-          <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-teal-500/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-24 -right-24 w-52 h-52 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-52 h-52 bg-teal-500/15 rounded-full blur-3xl pointer-events-none" />
 
           {/* Header */}
           <div className="flex items-center justify-between gap-3 mb-4">
@@ -227,28 +228,31 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                 บันทึกการเดินทาง 50 เขตกรุงเทพฯ
               </h3>
             </div>
-            <div className="text-right">
-              <span className="text-2xl">{stats.explorerRank.badge}</span>
-              <p className="text-[11px] font-bold text-emerald-300">Lv.{stats.explorerRank.level}</p>
+            <div className="text-right flex items-center gap-2">
+              <span className="text-3xl">{stats.explorerRank.badge}</span>
+              <div>
+                <p className="text-xs font-bold text-white">Level {stats.explorerRank.level}</p>
+                <p className="text-[10px] font-semibold text-emerald-300">Explorer</p>
+              </div>
             </div>
           </div>
 
           {/* Progress Card Body */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 mb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-[#060913]/70 backdrop-blur-md rounded-2xl p-4 border border-white/[0.08] mb-4">
             <div>
               <span className="text-[10px] uppercase font-bold text-slate-400">Visited</span>
-              <p className="text-2xl font-black text-emerald-400 mt-0.5">
+              <p className="text-2xl font-black text-emerald-400 mt-0.5 tabular-nums">
                 {stats.visitedDistricts} <span className="text-xs text-slate-400 font-normal">/ 50</span>
               </p>
-              <p className="text-[11px] text-emerald-300 font-medium">{stats.visitedPercentage}% Conquered</p>
+              <p className="text-[11px] text-emerald-300 font-semibold tabular-nums">{stats.visitedPercentage}% Conquered</p>
             </div>
 
             <div>
               <span className="text-[10px] uppercase font-bold text-slate-400">Spots Logged</span>
-              <p className="text-2xl font-black text-sky-400 mt-0.5">
+              <p className="text-2xl font-black text-sky-400 mt-0.5 tabular-nums">
                 {stats.totalPlaces} <span className="text-xs text-slate-400 font-normal">spots</span>
               </p>
-              <p className="text-[11px] text-sky-300 font-medium">Across all zones</p>
+              <p className="text-[11px] text-sky-300 font-semibold">Across all zones</p>
             </div>
 
             <div className="col-span-2 sm:col-span-1">
@@ -256,7 +260,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               <p className="text-sm font-bold text-amber-300 mt-1 truncate">
                 {stats.explorerRank.titleEn}
               </p>
-              <p className="text-[10px] text-slate-400 truncate">{stats.explorerRank.titleTh}</p>
+              <p className="text-[10px] text-slate-400 font-thai truncate">{stats.explorerRank.titleTh}</p>
             </div>
           </div>
 
@@ -264,13 +268,13 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           {topSpots.length > 0 && (
             <div>
               <span className="text-[10px] uppercase font-bold text-slate-400 block mb-2">
-                Recently Explored Landmarks
+                Explored Landmarks & Highlights
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {topSpots.map((spot) => (
                   <span
                     key={spot.id}
-                    className="text-xs bg-white/10 text-slate-200 px-2.5 py-1 rounded-xl border border-white/10"
+                    className="text-xs bg-[#060913]/90 text-slate-200 px-2.5 py-1 rounded-xl border border-white/[0.08]"
                   >
                     📍 {spot.name}
                   </span>
@@ -290,7 +294,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             className="w-full"
           >
             <Download className="w-4 h-4 mr-2" />
-            Download Snapshot Image
+            Download Passport Image
           </Button>
 
           <div className="flex gap-2">
@@ -311,7 +315,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               className="px-4"
               title="Copy to Clipboard"
             >
-              {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
             </Button>
           </div>
         </div>
@@ -319,3 +323,4 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     </Modal>
   );
 };
+
