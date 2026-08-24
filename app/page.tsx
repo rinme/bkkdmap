@@ -9,6 +9,7 @@ import { DistrictListView } from '@/components/district-list/DistrictListView';
 import { DistrictBottomSheet } from '@/components/DistrictBottomSheet';
 import { ShareModal } from '@/components/ShareModal';
 import { StatsModal } from '@/components/StatsModal';
+import { LiveSyncBadge } from '@/components/LiveSyncBadge';
 import { Compass, Sparkles, MapPin, CheckCircle2, TrendingUp, Trophy, ArrowRight, Award, ShieldCheck, Waves } from 'lucide-react';
 import { placeCategories } from '@/lib/districts-data';
 
@@ -27,10 +28,10 @@ const fetcher = async (url: string): Promise<DistrictsApiResponse> => {
 };
 
 export default function HomePage() {
-  const { data, error, isLoading } = useSWR<DistrictsApiResponse>(
+  const { data, error, isLoading, isValidating, mutate } = useSWR<DistrictsApiResponse>(
     '/api/districts',
     fetcher,
-    { revalidateOnFocus: true, dedupingInterval: 5000 }
+    { revalidateOnFocus: true, dedupingInterval: 5000, refreshInterval: 30000 }
   );
 
   const districts = data?.districts ?? [];
@@ -296,7 +297,15 @@ export default function HomePage() {
         stats={stats}
         districts={districts}
       />
+
+      {/* Floating Live Database Refetch Badge */}
+      <LiveSyncBadge
+        onSync={mutate}
+        isValidating={isValidating}
+        intervalSeconds={30}
+      />
     </div>
   );
 }
+
 

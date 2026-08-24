@@ -13,6 +13,7 @@ import { AdminSyncBar } from '@/components/admin/AdminSyncBar';
 import { AdminLoginForm } from '@/components/admin/AdminLoginForm';
 import { ShareModal } from '@/components/ShareModal';
 import { StatsModal } from '@/components/StatsModal';
+import { LiveSyncBadge } from '@/components/LiveSyncBadge';
 import { ShieldCheck, ArrowLeft } from 'lucide-react';
 
 interface AuthResponse {
@@ -53,12 +54,14 @@ export default function AdminPage() {
   const {
     data,
     isLoading: dataLoading,
+    isValidating,
     mutate: mutateDistricts
   } = useSWR<DistrictsApiResponse>(
     isAuthenticated ? '/api/districts' : null,
     fetcher,
-    { revalidateOnFocus: true }
+    { revalidateOnFocus: true, refreshInterval: 30000 }
   );
+
 
   const districts = data?.districts ?? [];
   const stats = data?.stats ?? null;
@@ -555,7 +558,18 @@ export default function AdminPage() {
           districts={districts}
         />
       )}
+
+      {/* Floating Live Database Refetch Badge */}
+      {isAuthenticated && (
+        <LiveSyncBadge
+          onSync={mutateDistricts}
+          isValidating={isValidating}
+          intervalSeconds={30}
+          className="bottom-20 right-4 sm:bottom-20 sm:right-6"
+        />
+      )}
     </div>
   );
 }
+
 
