@@ -34,7 +34,6 @@ data/*.local.json
 .superpowers/
 .agents/
 skills-lock.json
-/presentation/
 
 # Logs
 npm-debug.log*
@@ -44,7 +43,7 @@ pnpm-debug.log*
 lerna-debug.log*
 .pnpm-debug.log*
 
-# OS Files
+# OS & Temp Files
 .DS_Store
 .DS_Store?
 ._*
@@ -52,6 +51,7 @@ lerna-debug.log*
 .Trashes
 ehthumbs.db
 Thumbs.db
+~$*
 
 # TypeScript / IDE
 *.tsbuildinfo

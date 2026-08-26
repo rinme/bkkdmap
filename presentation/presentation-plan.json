@@ -1,0 +1,166 @@
+{
+  "title": "Bangkok 50 Districts Tracker: Full-Stack MVC Architecture Lecture",
+  "style": "dark-premium",
+  "style_guidelines": {
+    "color_palette": "Deep dark navy base (#060913 to #0a1120), luminous emerald green accent (#22c55e), cyan highlights (#06b6d4), frosted dark cards (#121c30), clean white typography (#f8fafc)",
+    "typography": "Modern clean sans-serif (SF Pro Display / Inter style), bold headers, monospace code font (Consolas / JetBrains Mono) for architecture snippets",
+    "imagery": "Vector SVG maps of Bangkok, clean architectural layer diagrams, code panels with syntax highlights, subtle glow effects",
+    "layout": "16:9 widescreen, generous whitespace, high-contrast cards, structured 2-column code/notice comparisons"
+  },
+  "aspect_ratio": "16:9",
+  "slides": [
+    {
+      "slide_number": 1,
+      "type": "title",
+      "title": "FULL-STACK ARCHITECTURE",
+      "subtitle": "Model · View · Controller — with a Modern Relational Database",
+      "context": "A hands-on case study built around the Bangkok 50 Districts Tracker project (Next.js 14 · React · Drizzle ORM · PostgreSQL)",
+      "visual_description": "Deep dark navy background with subtle emerald gradient ambient light. Center left: glowing emerald circle badge with '{ }'. Bold white title 'FULL-STACK ARCHITECTURE', emerald subtitle 'Model · View · Controller — with a Modern Relational Database', and muted context text."
+    },
+    {
+      "slide_number": 2,
+      "type": "content",
+      "title": "Learning Objectives",
+      "subtitle": "By the end of this lecture, you will be able to:",
+      "key_points": [
+        "Explain the Model–View–Controller pattern and why it separates concerns in modern web apps",
+        "Trace a request end-to-end through client events, Next.js route handlers, Drizzle ORM, and React views",
+        "Read and write TypeScript code that queries and mutates a relational database from a dedicated model layer",
+        "Run, extend, and debug a production-ready full-stack GIS tracker in VS Code with Bun & Next.js"
+      ],
+      "visual_description": "Four horizontal dark cards with glowing teal-emerald circular numbered badges (1 to 4), clean white typography."
+    },
+    {
+      "slide_number": 3,
+      "type": "diagram",
+      "title": "What Is MVC?",
+      "subtitle": "A design pattern that splits an application into three interconnected parts, each with one job.",
+      "key_idea": "The Controller never writes SQL directly, and the View never contains database logic. Each layer can change without breaking the others.",
+      "visual_description": "Three interconnected nodes: MODEL (Emerald, Data & rules) <--> CONTROLLER (Cyan, Traffic cop) <--> VIEW (Blue, What you see) with directional flow arrows."
+    },
+    {
+      "slide_number": 4,
+      "type": "grid",
+      "title": "Why Separate Concerns?",
+      "cards": [
+        {"title": "Maintainability", "description": "Fix bugs or redesign UI components without cascading unintended side-effects across other layers."},
+        {"title": "Reusability & Multi-Storage", "description": "The same Model layer powers the interactive map, admin dashboard, export CLI, and API consumers."},
+        {"title": "Team Workflow", "description": "Frontend engineers work on vector SVG gestures while backend engineers optimize relational schemas in parallel."},
+        {"title": "Testability & Type Safety", "description": "Strict TypeScript contracts (FullDistrict, Place, TrackerState) guarantee type safety across all boundaries."}
+      ],
+      "visual_description": "2x2 grid of modern dark cards with icons and emerald accents."
+    },
+    {
+      "slide_number": 5,
+      "type": "columns",
+      "title": "The Three Layers, Defined",
+      "columns": [
+        {"layer": "MODEL", "role": "Owns the data.", "description": "Talks to PostgreSQL via Drizzle ORM. Schemas, cascading relations, and persistence.", "files": "lib/db/schema.ts\nlib/storage.ts"},
+        {"layer": "VIEW", "role": "Owns the display.", "description": "Renders interactive SVG vector map, sliding bottom sheet, and analytics modals.", "files": "app/page.tsx\ncomponents/map/BangkokMap.tsx"},
+        {"layer": "CONTROLLER", "role": "Owns the flow.", "description": "Receives HTTP requests, verifies JWT sessions, validates payloads, and purges caches.", "files": "app/api/districts/route.ts\napp/api/auth/login/route.ts"}
+      ],
+      "visual_description": "Three vertical column cards with distinct colored headers for Model (emerald), View (cyan), and Controller (indigo)."
+    },
+    {
+      "slide_number": 6,
+      "type": "pillars",
+      "title": "Case Study: The Bangkok 50 Districts Tracker App",
+      "subtitle": "A full-stack GIS web application to explore, track, and log visits across all 50 official districts of Bangkok.",
+      "pillars": [
+        {"name": "Next.js 14", "role": "CONTROLLER", "description": "App Router API route handlers, serverless endpoints & cache tagging"},
+        {"name": "React + Tailwind", "role": "VIEW", "description": "Interactive vector SVG map, sliding bottom sheet & responsive UI"},
+        {"name": "Drizzle ORM", "role": "MODEL", "description": "Type-safe PostgreSQL schemas, migrations & cascading relations"},
+        {"name": "Bun Runtime", "role": "RUNTIME", "description": "High-performance JavaScript runtime, bundler & package manager"}
+      ],
+      "visual_description": "Four pill cards highlighting tech stack with bottom banner explaining relational storage architecture."
+    },
+    {
+      "slide_number": 7,
+      "type": "code-split",
+      "title": "Project Structure",
+      "subtitle": "Organizing a modern full-stack Next.js 14 application with clear boundaries.",
+      "visual_description": "Left side shows formatted ASCII file tree of bangkok-district-tracker. Right side details bulleted rationale for the directory layout."
+    },
+    {
+      "slide_number": 8,
+      "type": "code-split",
+      "title": "The Model Layer",
+      "subtitle": "lib/db/schema.ts & lib/storage.ts — the only files that define and query data",
+      "visual_description": "Left code editor showing Drizzle ORM pgTable definitions for districtStatuses and places with foreign key references. Right card showing 3 key architectural notices."
+    },
+    {
+      "slide_number": 9,
+      "type": "code-split",
+      "title": "The View Layer",
+      "subtitle": "components/map/BangkokMap.tsx — turns district data into interactive vector graphics",
+      "visual_description": "Left code editor showing React SVG map component mapping district status to colors (#22c55e vs #1e293b). Right card showing notices on declarative UI and event dispatching."
+    },
+    {
+      "slide_number": 10,
+      "type": "code-split",
+      "title": "The Controller Layer",
+      "subtitle": "app/api/districts/route.ts — request validation, security, and flow control",
+      "visual_description": "Left code editor showing Next.js POST route handler verifying JWT auth, validating request payload, delegating to storage, and revalidating cache. Right card highlighting security and cache design."
+    },
+    {
+      "slide_number": 11,
+      "type": "table",
+      "title": "Routes: Connecting URLs to Controllers",
+      "subtitle": "Next.js App Router maps HTTP methods and URLs to dedicated Route Handler functions.",
+      "visual_description": "Dark glass table displaying HTTP methods (GET, POST), URLs (/api/districts, /api/auth/login, /api/export), controller actions, and specific purposes."
+    },
+    {
+      "slide_number": 12,
+      "type": "lifecycle",
+      "title": "Request Lifecycle: Adding a Place",
+      "subtitle": "Follow one user request from the browser interface all the way to PostgreSQL and back.",
+      "steps": [
+        "User submits 'Add Place' form in District Bottom Sheet [VIEW → POST /api/districts]",
+        "Next.js App Router routes request to the API controller [ROUTES → app/api/districts/route.ts]",
+        "Controller verifies JWT auth & validates payload input [CONTROLLER → isAuthenticatedAdmin()]",
+        "Model layer executes Drizzle ORM insert into PostgreSQL [MODEL → db.insert(places).values(...)]",
+        "Cache revalidated; SWR refetches; district glows emerald [CONTROLLER → SWR → VIEW]"
+      ],
+      "visual_description": "5 numbered horizontal steps showing the journey of a request from client to database and revalidation."
+    },
+    {
+      "slide_number": 13,
+      "type": "schema",
+      "title": "The Relational Database",
+      "subtitle": "PostgreSQL stores district states and places across normalized tables with relational integrity.",
+      "visual_description": "Left card detailing district_statuses and places columns/types. Right code editor showing PostgreSQL DDL schema with foreign key constraints."
+    },
+    {
+      "slide_number": 14,
+      "type": "setup",
+      "title": "Running the App in VS Code",
+      "subtitle": "Get the full-stack Bangkok District Tracker development environment up and running in seconds.",
+      "visual_description": "Left side has 5 numbered setup steps. Right side displays terminal execution output with bun commands and local server URLs."
+    },
+    {
+      "slide_number": 15,
+      "type": "exercises",
+      "title": "Practice Exercises",
+      "subtitle": "Extend the Bangkok District Tracker app to deepen your understanding of each architectural layer.",
+      "exercises": [
+        "GIS Coordinate Pins: Add latitude and longitude to places and render interactive markers on the SVG map",
+        "Multi-User Passports: Add multi-tenant user authentication and personalized district passports",
+        "Faceted Category Search: Implement dynamic category & zone filtering in Drizzle SQL queries",
+        "Cloud Image Storage: Connect AWS S3 / Cloudflare R2 for uploading spot photo albums"
+      ],
+      "visual_description": "4 colorful challenge cards with icon tags and exercise descriptions."
+    },
+    {
+      "slide_number": 16,
+      "type": "summary",
+      "title": "Summary & Discussion",
+      "bullets": [
+        "Full-Stack MVC separates an application into Model (data), View (display), and Controller (flow & security).",
+        "The Controller is the single coordinator that manages validation, auth guards, and cache revalidation.",
+        "Relational databases enforce data integrity via schemas, foreign keys, and cascading relationships.",
+        "The same architectural principles scale from small tracker apps to enterprise geospatial platforms."
+      ],
+      "visual_description": "Dark finale slide with emerald checkmark, summary takeaways, and Questions & discussion prompt."
+    }
+  ]
+}
