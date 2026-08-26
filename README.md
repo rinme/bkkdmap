@@ -192,58 +192,38 @@ CREATE TABLE uploaded_images (
 ### 1. Prerequisites
 - **Bun** (recommended) or **Node.js 18+** / **npm**
 
-### 2. Installation
+### 2. Installation & 1-Command Interactive Setup
 ```bash
 # Clone or navigate to the directory
 cd bangkok-district-tracker
 
-# Install dependencies using Bun
+# Install dependencies
 bun install
 
-# Or using npm
-npm install
+# Run 1-command interactive setup
+# Prompts for config (DATABASE_URL, ADMIN_PASSWORD, JWT_SECRET),
+# writes .env.local, builds project, and runs db:push / seed automatically!
+bun run setup
 ```
 
-### 3. Configure Environment Variables
-Copy `.env.example` to `.env.local`:
+### 3. Start Development Server
 ```bash
-cp .env.example .env.local
-```
-
-Default settings in `.env.local`:
-```env
-# Optional: Neon / Vercel PostgreSQL Connection String
-DATABASE_URL="postgres://default:xxxx@ep-xxxx.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
-
-# Admin Dashboard Password (default: bkk2026)
-ADMIN_PASSWORD="bkk2026"
-```
-
-> **Note:** If no `DATABASE_URL` is configured, the application runs seamlessly using local JSON file storage (`data/bangkok-tracker-state.json`) with zero external database dependencies!
-
-### 4. Database Setup (Optional if using Postgres)
-```bash
-# Push schema to Postgres
-bun run db:push
-
-# (Optional) Seed starter places into Postgres
-bun run db:seed
-
-# (Optional) Launch Drizzle Studio DB viewer
-bun run db:studio
-```
-
-### 5. Run Development Server
-```bash
-# Run with Bun
+# Start development server
 bun dev
-
-# Or with npm
-npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 To access the Admin dashboard, navigate to [http://localhost:3000/admin](http://localhost:3000/admin) (Default password: `bkk2026`).
+
+---
+
+### 🔧 Manual Setup Alternative (Step-by-Step)
+If you prefer configuring manually instead of `bun run setup`:
+1. Copy environment variables: `cp .env.example .env.local`
+2. Configure `DATABASE_URL` and `ADMIN_PASSWORD` in `.env.local`
+3. Push schema: `bun run db:push` (if using Postgres)
+4. Seed database: `bun run db:seed` (if using Postgres)
+5. Start dev server: `bun dev`
 
 ---
 
