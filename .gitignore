@@ -32,6 +32,9 @@ data/*.local.json
 
 # Superpowers & Agent Workspaces
 .superpowers/
+.agents/
+skills-lock.json
+/presentation/
 
 # Logs
 npm-debug.log*
