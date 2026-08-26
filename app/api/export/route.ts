@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { zipSync, strToU8 } from 'fflate';
-import { getTrackerState } from '@/lib/storage';
+import { getTrackerState, getAllUploadedImages } from '@/lib/storage';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,14 +45,23 @@ export async function GET(req: NextRequest) {
       // Add database state JSON
       zipEntries['bangkok-tracker-state.json'] = strToU8(JSON.stringify(state, null, 2));
 
-      // Add uploaded images recursively
+      // Add uploaded images from database & memory
+      const dbImages = await getAllUploadedImages();
+      for (const img of dbImages) {
+        zipEntries[`uploads/${img.districtId}/${img.filename}`] = new Uint8Array(img.buffer);
+      }
+
+      // Also add uploaded images from disk if available
       const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
       const uploadedFiles = await collectFilesRecursively(uploadsDir);
 
       for (const item of uploadedFiles) {
         try {
-          const fileBuffer = await fs.promises.readFile(item.absolutePath);
-          zipEntries[`uploads/${item.relativePath}`] = new Uint8Array(fileBuffer);
+          const zipKey = `uploads/${item.relativePath}`;
+          if (!zipEntries[zipKey]) {
+            const fileBuffer = await fs.promises.readFile(item.absolutePath);
+            zipEntries[zipKey] = new Uint8Array(fileBuffer);
+          }
         } catch (readErr) {
           console.warn(`Could not read file for zip export: ${item.absolutePath}`, readErr);
         }

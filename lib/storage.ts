@@ -3,7 +3,7 @@ import path from 'path';
 import { unstable_cache } from 'next/cache';
 import { eq, desc, sql } from 'drizzle-orm';
 import { getDb } from './db';
-import { districtStatuses, places, appSettings } from './db/schema';
+import { districtStatuses, places, appSettings, uploadedImages } from './db/schema';
 import initialStateJson from '../data/initial-state.json';
 import { bangkokDistricts } from './districts-data';
 import { Place, DistrictUserData, TrackerState, AppSettings, DEFAULT_APP_SETTINGS } from './types';
@@ -14,6 +14,7 @@ const SETTINGS_FILE_PATH = path.join(process.cwd(), 'data', 'app-settings.json')
 // In-memory fallback singleton
 let memoryStateCache: TrackerState | null = null;
 let memorySettingsCache: AppSettings | null = null;
+const memoryImagesCache = new Map<string, { districtId: string; filename: string; mimeType: string; buffer: Buffer }>();
 let tablesInitialized = false;
 
 function parsePhotos(photosRaw: string | null | undefined): string[] | undefined {
@@ -141,10 +142,28 @@ async function ensureTablesExist(db: NonNullable<ReturnType<typeof getDb>>): Pro
     `);
 
     await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS uploaded_images (
+        id text PRIMARY KEY,
+        district_id text NOT NULL,
+        filename text NOT NULL UNIQUE,
+        mime_type text NOT NULL,
+        data text NOT NULL,
+        size text NOT NULL DEFAULT '0',
+        created_at timestamp NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.execute(sql`
       CREATE INDEX IF NOT EXISTS places_district_id_idx ON places(district_id);
     `);
     await db.execute(sql`
       CREATE INDEX IF NOT EXISTS places_category_idx ON places(category);
+    `);
+    await db.execute(sql`
+      CREATE INDEX IF NOT EXISTS uploaded_images_filename_idx ON uploaded_images(filename);
+    `);
+    await db.execute(sql`
+      CREATE INDEX IF NOT EXISTS uploaded_images_district_id_idx ON uploaded_images(district_id);
     `);
 
     tablesInitialized = true;
@@ -743,3 +762,164 @@ export async function saveTrackerState(state: TrackerState): Promise<boolean> {
 
   return true;
 }
+
+// ----------------------------------------------------
+// Persistent Uploaded Images Handlers (Serverless Safe)
+// ----------------------------------------------------
+export interface UploadedImageRecord {
+  id?: string;
+  districtId: string;
+  filename: string;
+  mimeType: string;
+  buffer: Buffer;
+}
+
+export async function saveUploadedImage({
+  districtId,
+  filename,
+  mimeType,
+  buffer
+}: UploadedImageRecord): Promise<void> {
+  // 1. Cache in memory
+  memoryImagesCache.set(filename, { districtId, filename, mimeType, buffer });
+
+  // 2. Persist to Postgres database
+  const db = getDb();
+  if (db) {
+    try {
+      await ensureTablesExist(db);
+      const base64Data = buffer.toString('base64');
+      const uniqueId = `img-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+
+      await db
+        .insert(uploadedImages)
+        .values({
+          id: uniqueId,
+          districtId,
+          filename,
+          mimeType,
+          data: base64Data,
+          size: buffer.length.toString(),
+          createdAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: uploadedImages.filename,
+          set: {
+            mimeType,
+            data: base64Data,
+            size: buffer.length.toString(),
+            createdAt: new Date(),
+          },
+        });
+    } catch (dbErr) {
+      console.warn('Postgres saveUploadedImage warning:', dbErr);
+    }
+  }
+
+  // 3. Gracefully attempt local file write if filesystem is writable (local dev/container)
+  try {
+    const targetDir = path.resolve(process.cwd(), 'public', 'uploads', districtId);
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+    const filePath = path.join(targetDir, filename);
+    fs.writeFileSync(filePath, buffer);
+  } catch (fsErr) {
+    // Expected to fail on read-only serverless lambdas (Vercel) - safe to ignore since DB stores it
+  }
+}
+
+export async function getUploadedImage(
+  filename: string
+): Promise<{ districtId: string; filename: string; mimeType: string; buffer: Buffer } | null> {
+  // 1. Check memory cache
+  const cached = memoryImagesCache.get(filename);
+  if (cached) {
+    return cached;
+  }
+
+  // 2. Check Postgres DB
+  const db = getDb();
+  if (db) {
+    try {
+      await ensureTablesExist(db);
+      const rows = await db
+        .select()
+        .from(uploadedImages)
+        .where(eq(uploadedImages.filename, filename))
+        .limit(1);
+
+      if (rows.length > 0) {
+        const row = rows[0];
+        const buffer = Buffer.from(row.data, 'base64');
+        const record = {
+          districtId: row.districtId,
+          filename: row.filename,
+          mimeType: row.mimeType,
+          buffer,
+        };
+        memoryImagesCache.set(filename, record);
+        return record;
+      }
+    } catch (err) {
+      console.warn('Postgres getUploadedImage warning:', err);
+    }
+  }
+
+  return null;
+}
+
+export async function deleteUploadedImage(filename: string): Promise<boolean> {
+  memoryImagesCache.delete(filename);
+
+  const db = getDb();
+  if (db) {
+    try {
+      await ensureTablesExist(db);
+      await db.delete(uploadedImages).where(eq(uploadedImages.filename, filename));
+    } catch (err) {
+      console.warn('Postgres deleteUploadedImage warning:', err);
+    }
+  }
+
+  return true;
+}
+
+export async function getAllUploadedImages(): Promise<
+  Array<{ districtId: string; filename: string; mimeType: string; buffer: Buffer }>
+> {
+  const results: Array<{ districtId: string; filename: string; mimeType: string; buffer: Buffer }> = [];
+  const visitedFilenames = new Set<string>();
+
+  // 1. Fetch from Postgres
+  const db = getDb();
+  if (db) {
+    try {
+      await ensureTablesExist(db);
+      const rows = await db.select().from(uploadedImages);
+      for (const row of rows) {
+        const buffer = Buffer.from(row.data, 'base64');
+        results.push({
+          districtId: row.districtId,
+          filename: row.filename,
+          mimeType: row.mimeType,
+          buffer,
+        });
+        visitedFilenames.add(row.filename);
+      }
+    } catch (err) {
+      console.warn('Postgres getAllUploadedImages warning:', err);
+    }
+  }
+
+  // 2. Add any remaining from memory
+  memoryImagesCache.forEach((img, filename) => {
+    if (!visitedFilenames.has(filename)) {
+      results.push(img);
+      visitedFilenames.add(filename);
+    }
+  });
+
+  return results;
+}
+

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { verifyAdminToken } from '@/lib/auth';
-import { getAppSettings } from '@/lib/storage';
+import { getAppSettings, saveUploadedImage, deleteUploadedImage } from '@/lib/storage';
 
 export const dynamic = 'force-dynamic';
 
@@ -102,8 +102,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await fs.promises.mkdir(targetDir, { recursive: true });
-
     const uploadedResults: Array<{ url: string; filename: string; size: number }> = [];
 
     for (const file of files) {
@@ -132,12 +130,17 @@ export async function POST(req: NextRequest) {
       const ext = getFileExtension(file);
       const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
       const filename = `${sanitizedDistrictId}-${uniqueSuffix}.${ext}`;
-      const filePath = path.join(targetDir, filename);
 
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      await fs.promises.writeFile(filePath, buffer);
+      // Persist to Postgres database & memory & disk
+      await saveUploadedImage({
+        districtId: sanitizedDistrictId,
+        filename,
+        mimeType: file.type || 'image/webp',
+        buffer,
+      });
 
       const url = `/uploads/${sanitizedDistrictId}/${filename}`;
       uploadedResults.push({
@@ -201,25 +204,22 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
+    const filename = path.basename(targetUrl);
+    await deleteUploadedImage(filename);
+
     const publicDir = path.resolve(process.cwd(), 'public');
     const uploadsDir = path.resolve(publicDir, 'uploads');
     const relativePath = targetUrl.replace(/^\/+/, '');
     const absolutePath = path.resolve(publicDir, relativePath);
 
-    // Verify resolved path is strictly inside public/uploads
-    if (!absolutePath.startsWith(uploadsDir)) {
-      return NextResponse.json(
-        { success: false, error: 'Access denied' },
-        { status: 403 }
-      );
-    }
-
-    try {
-      if (fs.existsSync(absolutePath)) {
-        await fs.promises.unlink(absolutePath);
+    if (absolutePath.startsWith(uploadsDir)) {
+      try {
+        if (fs.existsSync(absolutePath)) {
+          await fs.promises.unlink(absolutePath);
+        }
+      } catch (unlinkErr: any) {
+        // Safe to ignore on serverless
       }
-    } catch (unlinkErr: any) {
-      console.warn('Error unlinking file:', unlinkErr);
     }
 
     return NextResponse.json({

@@ -61,10 +61,28 @@ export async function prebuild() {
     `);
 
     await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS uploaded_images (
+        id text PRIMARY KEY,
+        district_id text NOT NULL,
+        filename text NOT NULL UNIQUE,
+        mime_type text NOT NULL,
+        data text NOT NULL,
+        size text NOT NULL DEFAULT '0',
+        created_at timestamp NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.execute(sql`
       CREATE INDEX IF NOT EXISTS places_district_id_idx ON places(district_id);
     `);
     await db.execute(sql`
       CREATE INDEX IF NOT EXISTS places_category_idx ON places(category);
+    `);
+    await db.execute(sql`
+      CREATE INDEX IF NOT EXISTS uploaded_images_filename_idx ON uploaded_images(filename);
+    `);
+    await db.execute(sql`
+      CREATE INDEX IF NOT EXISTS uploaded_images_district_idx ON uploaded_images(district_id);
     `);
 
     console.log('✅ Database tables and indexes verified.');

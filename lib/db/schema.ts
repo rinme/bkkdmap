@@ -35,6 +35,23 @@ export const appSettings = pgTable('app_settings', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+export const uploadedImages = pgTable(
+  'uploaded_images',
+  {
+    id: text('id').primaryKey(),
+    districtId: text('district_id').notNull(),
+    filename: text('filename').notNull().unique(),
+    mimeType: text('mime_type').notNull(),
+    data: text('data').notNull(),
+    size: text('size').notNull().default('0'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+  },
+  (table) => ({
+    filenameIdx: index('uploaded_images_filename_idx').on(table.filename),
+    districtIdIdx: index('uploaded_images_district_id_idx').on(table.districtId),
+  })
+);
+
 export const districtStatusesRelations = relations(districtStatuses, ({ many }) => ({
   places: many(places),
 }));
