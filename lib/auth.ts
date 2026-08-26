@@ -104,3 +104,16 @@ export async function isAuthenticatedAdmin(): Promise<boolean> {
   const token = cookieStore.get(ADMIN_COOKIE_NAME)?.value;
   return verifyAdminSessionToken(token);
 }
+
+export async function verifyAdminToken(req?: any): Promise<boolean> {
+  try {
+    if (req && typeof req.cookies?.get === 'function') {
+      const token = req.cookies.get(ADMIN_COOKIE_NAME)?.value;
+      if (token) {
+        return verifyAdminSessionToken(token);
+      }
+    }
+  } catch {}
+  return isAuthenticatedAdmin();
+}
+
