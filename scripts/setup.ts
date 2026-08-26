@@ -70,6 +70,19 @@ function promptQuestion(rl: readline.Interface, query: string): Promise<string> 
   });
 }
 
+function maskDbUrl(url: string): string {
+  if (!url) return '';
+  try {
+    const parsed = new URL(url);
+    if (parsed.password) {
+      parsed.password = '******';
+    }
+    return parsed.toString();
+  } catch {
+    return url.replace(/:\/\/[^:]+:([^@]+)@/, '://***:******@');
+  }
+}
+
 async function main() {
   console.clear();
   console.log(`
@@ -99,7 +112,7 @@ and initialize the database/storage ready for development or production.${c.rese
   console.log(`${c.bold}1. PostgreSQL Database Connection URL (Neon / Vercel Postgres)${c.reset}`);
   console.log(`${c.slate}   (Optional: Press Enter to skip and use offline local JSON file storage)${c.reset}`);
   const dbPrompt = defaultDbUrl
-    ? `${c.slate}   Default: [${defaultDbUrl}]${c.reset}\n   ${c.emerald}DATABASE_URL:${c.reset} `
+    ? `${c.slate}   Default: [${maskDbUrl(defaultDbUrl)}] (Press Enter to keep)${c.reset}\n   ${c.emerald}DATABASE_URL:${c.reset} `
     : `   ${c.emerald}DATABASE_URL:${c.reset} `;
   const inputDbUrl = await promptQuestion(rl, dbPrompt);
   const finalDbUrl = inputDbUrl || defaultDbUrl;
