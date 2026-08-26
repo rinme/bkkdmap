@@ -44,7 +44,7 @@ function parseEnvFile(filePath: string): Record<string, string> {
   return result;
 }
 
-function runCommand(command: string, args: string[], env: NodeJS.ProcessEnv = process.env): Promise<void> {
+function runCommand(command: string, args: string[], env: Record<string, string | undefined> = process.env): Promise<void> {
   return new Promise((resolve, reject) => {
     const isWindows = process.platform === 'win32';
     const isBun = typeof (process.versions as any)?.bun !== 'undefined';
