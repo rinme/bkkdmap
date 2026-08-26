@@ -23,6 +23,12 @@
 
 # Local Data Storage & Dev Runtime State
 /data/bangkok-tracker-state.json
+/data/app-settings.json
+data/*.local.json
+
+# Uploaded User Content
+/public/uploads/*
+!/public/uploads/.gitkeep
 
 # Superpowers & Agent Workspaces
 .superpowers/
