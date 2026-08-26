@@ -9,6 +9,7 @@ import { Header } from '@/components/Header';
 import { BangkokMap } from '@/components/map/BangkokMap';
 import { DistrictListView } from '@/components/district-list/DistrictListView';
 import { AdminPlaceManager } from '@/components/admin/AdminPlaceManager';
+import { AdminSettingsModal } from '@/components/admin/AdminSettingsModal';
 import { AdminSyncBar } from '@/components/admin/AdminSyncBar';
 import { AdminLoginForm } from '@/components/admin/AdminLoginForm';
 import { ShareModal } from '@/components/ShareModal';
@@ -70,6 +71,7 @@ export default function AdminPage() {
   const [currentView, setCurrentView] = useState<ViewMode>('list');
   const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(null);
   const [isPlaceManagerOpen, setIsPlaceManagerOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
 
@@ -465,6 +467,7 @@ export default function AdminPage() {
           onOpenStatsModal={() => setIsStatsModalOpen(true)}
           isAdmin={true}
           onLogout={handleLogout}
+          onOpenSettings={() => setIsSettingsOpen(true)}
         />
       )}
 
@@ -525,6 +528,12 @@ export default function AdminPage() {
         onPlaceUpdated={handlePlaceUpdated}
         onPlaceDeleted={handlePlaceDeleted}
         onNotesUpdated={handleNotesUpdated}
+      />
+
+      {/* Admin Settings & Image Compression Modal */}
+      <AdminSettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
       />
 
       {/* Sticky Bottom Sync Status Bar */}

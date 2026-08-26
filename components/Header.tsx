@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { TrackerStats, ViewMode } from '@/lib/types';
 import { ViewSwitcher } from './ViewSwitcher';
-import { Share2, Lock, Unlock, BarChart2, Compass, ShieldCheck, Sparkles, MapPin } from 'lucide-react';
+import { Share2, Lock, Unlock, BarChart2, Compass, ShieldCheck, Sparkles, MapPin, Settings } from 'lucide-react';
 import { Button } from './ui/Button';
 
 interface HeaderProps {
@@ -13,6 +13,7 @@ interface HeaderProps {
   onOpenStatsModal: () => void;
   isAdmin?: boolean;
   onLogout?: () => void;
+  onOpenSettings?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -22,7 +23,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenShareModal,
   onOpenStatsModal,
   isAdmin = false,
-  onLogout
+  onLogout,
+  onOpenSettings
 }) => {
   return (
     <header className="sticky top-0 z-40 w-full bg-[#060913]/85 backdrop-blur-xl border-b border-white/[0.07] shadow-xl transition-all pt-[env(safe-area-inset-top)]">
@@ -75,6 +77,15 @@ export const Header: React.FC<HeaderProps> = ({
                   <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
                   <span className="hidden md:inline">Admin</span>
                 </Link>
+                {onOpenSettings && (
+                  <button
+                    onClick={onOpenSettings}
+                    className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
+                    title="Admin Settings & Upload Configuration"
+                  >
+                    <Settings className="w-4 h-4 text-slate-300" />
+                  </button>
+                )}
                 {onLogout && (
                   <button
                     onClick={onLogout}
