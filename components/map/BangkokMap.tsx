@@ -179,7 +179,7 @@ export const BangkokMap: React.FC<BangkokMapProps> = ({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-[65vh] min-h-[480px] max-h-[740px] bg-gradient-to-b from-[#0a0f1d] via-[#090d18] to-[#060913] rounded-3xl overflow-hidden shadow-2xl border border-white/[0.08] touch-none select-none"
+      className="relative w-full h-[calc(100dvh-130px)] sm:h-[65vh] sm:min-h-[500px] sm:max-h-[760px] bg-gradient-to-b from-[#0a0f1d] via-[#090d18] to-[#060913] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border border-white/[0.08] touch-none select-none"
       onWheel={handleWheel}
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
@@ -217,11 +217,11 @@ export const BangkokMap: React.FC<BangkokMapProps> = ({
         onToggleLabels={() => setShowLabels(!showLabels)}
       />
 
-      {/* Zone Quick Filter Pill Bar */}
-      <div className="absolute top-3.5 left-3.5 z-20 flex flex-wrap items-center gap-1.5 max-w-[calc(100%-90px)] pointer-events-auto">
+      {/* Zone Quick Filter Pill Bar (Horizontally scrollable on mobile) */}
+      <div className="absolute top-2.5 sm:top-3.5 left-2.5 sm:left-3.5 z-20 flex items-center gap-1.5 max-w-[calc(100%-20px)] sm:max-w-[calc(100%-90px)] overflow-x-auto no-scrollbar py-0.5 pointer-events-auto flex-nowrap whitespace-nowrap">
         <button
           onClick={() => setCurrentZone(null)}
-          className={`px-3 py-1 text-xs rounded-full font-bold transition-all duration-200 backdrop-blur-md cursor-pointer ${
+          className={`px-3 py-1 text-xs rounded-full font-bold transition-all duration-200 backdrop-blur-md cursor-pointer flex-shrink-0 ${
             currentZone === null
               ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/30'
               : 'bg-[#0f172a]/80 hover:bg-[#1e293b]/80 text-slate-300 border border-white/[0.08]'
@@ -233,7 +233,7 @@ export const BangkokMap: React.FC<BangkokMapProps> = ({
           <button
             key={zone.id}
             onClick={() => setCurrentZone(currentZone === zone.id ? null : zone.id)}
-            className={`px-2.5 py-0.5 text-xs rounded-full font-semibold transition-all duration-200 backdrop-blur-md border cursor-pointer ${
+            className={`px-2.5 py-0.5 text-xs rounded-full font-semibold transition-all duration-200 backdrop-blur-md border cursor-pointer flex-shrink-0 ${
               currentZone === zone.id
                 ? 'bg-white text-slate-950 font-bold shadow-md border-white'
                 : 'bg-[#0f172a]/70 hover:bg-[#1e293b]/70 text-slate-300 border-white/[0.06]'
@@ -246,6 +246,18 @@ export const BangkokMap: React.FC<BangkokMapProps> = ({
             {zone.nameTh}
           </button>
         ))}
+      </div>
+
+      {/* Mobile Floating Status Pill */}
+      <div className="sm:hidden absolute bottom-3 left-2.5 z-20 pointer-events-auto">
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-[#0c1322]/90 backdrop-blur-xl border border-white/[0.12] shadow-xl text-xs">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-glow-emerald" />
+          <span className="font-bold text-white text-[11px]">
+            <span className="text-emerald-400 tabular-nums">{visitedCount}</span>/50 Explored
+          </span>
+          <span className="text-slate-500">•</span>
+          <span className="text-slate-400 text-[10px]">Tap district</span>
+        </div>
       </div>
 
       {/* Interactive SVG Viewport */}

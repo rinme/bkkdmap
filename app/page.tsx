@@ -95,18 +95,18 @@ export default function HomePage() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 pt-3 sm:pt-5 pb-12 space-y-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-2 sm:px-6 pt-2 sm:pt-5 pb-2 sm:pb-12 space-y-3 sm:space-y-6">
         {/* Dynamic View: Map vs List vs Analytics */}
         {currentView === 'map' && (
-          <div className="space-y-3.5">
+          <div className="space-y-3 sm:space-y-3.5">
             <BangkokMap
               districts={districts}
               selectedDistrict={selectedDistrict}
               onSelectDistrict={handleSelectDistrict}
             />
 
-            {/* Quick Helper Banner */}
-            <div className="glass-panel rounded-2xl p-4 border border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-3 text-xs bg-[#0c1322]/80">
+            {/* Quick Helper Banner (Desktop / iPad only) */}
+            <div className="hidden sm:flex glass-panel rounded-2xl p-4 border border-white/[0.08] flex-col sm:flex-row items-center justify-between gap-3 text-xs bg-[#0c1322]/80">
               <div className="flex items-center gap-3">
                 <span className="p-2.5 rounded-2xl bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex-shrink-0">
                   <Sparkles className="w-4 h-4" />

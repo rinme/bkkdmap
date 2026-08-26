@@ -28,7 +28,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
   onToggleLabels
 }) => {
   return (
-    <div className="absolute top-3.5 right-3.5 z-20 flex flex-col gap-2 pointer-events-auto">
+    <div className="absolute bottom-3 right-2.5 sm:bottom-auto sm:top-3.5 sm:right-3.5 z-20 flex flex-col gap-1.5 sm:gap-2 pointer-events-auto">
       {/* Zoom / Navigation Group */}
       <div className="flex flex-col bg-[#0d1424]/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/[0.08] p-1 gap-1">
         <button
