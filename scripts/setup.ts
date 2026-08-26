@@ -47,7 +47,16 @@ function parseEnvFile(filePath: string): Record<string, string> {
 function runCommand(command: string, args: string[], env: NodeJS.ProcessEnv = process.env): Promise<void> {
   return new Promise((resolve, reject) => {
     const isWindows = process.platform === 'win32';
-    const child = spawn(isWindows && !command.endsWith('.cmd') && !command.endsWith('.exe') ? `${command}.cmd` : command, args, {
+    const isBun = typeof (process.versions as any)?.bun !== 'undefined';
+    
+    let execCmd = command;
+    if (command === 'bun') {
+      execCmd = isBun ? process.execPath : 'bun';
+    } else if (isWindows && (command === 'npm' || command === 'npx')) {
+      execCmd = `${command}.cmd`;
+    }
+
+    const child = spawn(execCmd, args, {
       stdio: 'inherit',
       shell: isWindows,
       env: { ...process.env, ...env },
