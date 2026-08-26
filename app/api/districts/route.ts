@@ -7,7 +7,8 @@ import {
   addPlaceToDistrict,
   updatePlaceInDistrict,
   deletePlaceFromDistrict,
-  updateDistrictNotes
+  updateDistrictNotes,
+  updateDistrictPhotos
 } from '@/lib/storage';
 import { isAuthenticatedAdmin } from '@/lib/auth';
 
@@ -91,6 +92,15 @@ export async function POST(req: NextRequest) {
       case 'update_notes': {
         const { notes } = body;
         updatedState = await updateDistrictNotes(districtId, notes || '');
+        break;
+      }
+
+      case 'update_district_photos': {
+        const { photos } = body;
+        if (!Array.isArray(photos)) {
+          return NextResponse.json({ error: 'photos must be an array' }, { status: 400 });
+        }
+        updatedState = await updateDistrictPhotos(districtId, photos);
         break;
       }
 

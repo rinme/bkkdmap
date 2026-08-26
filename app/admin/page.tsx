@@ -359,6 +359,58 @@ export default function AdminPage() {
     }
   };
 
+  const handleDistrictPhotosUpdated = async (districtId: string, photos: string[]) => {
+    if (!data) return;
+    setIsSaving(true);
+
+    const updatedDistricts = data.districts.map((d) => {
+      if (d.id === districtId) {
+        return {
+          ...d,
+          photos
+        };
+      }
+      return d;
+    });
+    const updatedStats = calculateTrackerStats(updatedDistricts);
+    const optimisticData: DistrictsApiResponse = {
+      ...data,
+      districts: updatedDistricts,
+      stats: updatedStats
+    };
+
+    try {
+      await mutateDistricts(
+        async () => {
+          const res = await fetch('/api/districts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'update_district_photos',
+              districtId,
+              photos
+            })
+          });
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || 'Failed to update district photos');
+          }
+          return await res.json();
+        },
+        {
+          optimisticData,
+          rollbackOnError: true,
+          populateCache: true,
+          revalidate: false
+        }
+      );
+    } catch (err: any) {
+      alert(err.message || 'Error updating district photos');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleExport = () => {
     window.location.href = '/api/export';
   };
@@ -528,6 +580,7 @@ export default function AdminPage() {
         onPlaceUpdated={handlePlaceUpdated}
         onPlaceDeleted={handlePlaceDeleted}
         onNotesUpdated={handleNotesUpdated}
+        onDistrictPhotosUpdated={handleDistrictPhotosUpdated}
       />
 
       {/* Admin Settings & Image Compression Modal */}
