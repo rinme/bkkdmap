@@ -17,6 +17,7 @@ export interface Place {
   category: PlaceCategory;
   visitedDate?: string; // YYYY-MM-DD
   notes?: string;
+  photos?: string[];
 }
 
 export interface DistrictMeta {
@@ -43,8 +44,25 @@ export interface DistrictMeta {
 export interface DistrictUserData {
   isVisited: boolean;
   generalNotes?: string;
+  photos?: string[];
   visitedPlaces: Place[];
 }
+
+export interface AppSettings {
+  maxImageSizeKb: number;       // Default: 1024 (1 MB)
+  maxImageDimension: number;   // Default: 1920 (px)
+  imageQuality: number;        // Default: 80 (%)
+  autoCompress: boolean;       // Default: true
+  allowedMimeTypes: string[];  // Default: ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
+}
+
+export const DEFAULT_APP_SETTINGS: AppSettings = {
+  maxImageSizeKb: 1024,
+  maxImageDimension: 1920,
+  imageQuality: 80,
+  autoCompress: true,
+  allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
+};
 
 export interface FullDistrict extends DistrictMeta, DistrictUserData {
   placeCount: number;

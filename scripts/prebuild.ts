@@ -26,8 +26,13 @@ export async function prebuild() {
         district_id text PRIMARY KEY,
         is_visited boolean NOT NULL DEFAULT false,
         general_notes text,
+        photos text,
         updated_at timestamp NOT NULL DEFAULT NOW()
       );
+    `);
+
+    await db.execute(sql`
+      ALTER TABLE district_statuses ADD COLUMN IF NOT EXISTS photos text;
     `);
 
     await db.execute(sql`
@@ -38,7 +43,20 @@ export async function prebuild() {
         category text NOT NULL DEFAULT 'Other',
         visited_date text,
         notes text,
+        photos text,
         created_at timestamp NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.execute(sql`
+      ALTER TABLE places ADD COLUMN IF NOT EXISTS photos text;
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS app_settings (
+        key text PRIMARY KEY,
+        value text NOT NULL,
+        updated_at timestamp NOT NULL DEFAULT NOW()
       );
     `);
 

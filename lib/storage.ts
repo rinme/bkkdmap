@@ -3,16 +3,64 @@ import path from 'path';
 import { unstable_cache } from 'next/cache';
 import { eq, desc, sql } from 'drizzle-orm';
 import { getDb } from './db';
-import { districtStatuses, places } from './db/schema';
+import { districtStatuses, places, appSettings } from './db/schema';
 import initialStateJson from '../data/initial-state.json';
 import { bangkokDistricts } from './districts-data';
-import { Place, DistrictUserData, TrackerState } from './types';
+import { Place, DistrictUserData, TrackerState, AppSettings, DEFAULT_APP_SETTINGS } from './types';
 
 const STATE_FILE_PATH = path.join(process.cwd(), 'data', 'bangkok-tracker-state.json');
+const SETTINGS_FILE_PATH = path.join(process.cwd(), 'data', 'app-settings.json');
 
 // In-memory fallback singleton
 let memoryStateCache: TrackerState | null = null;
+let memorySettingsCache: AppSettings | null = null;
 let tablesInitialized = false;
+
+function parsePhotos(photosRaw: string | null | undefined): string[] | undefined {
+  if (!photosRaw) return undefined;
+  try {
+    const parsed = JSON.parse(photosRaw);
+    if (Array.isArray(parsed)) {
+      return parsed.filter((item): item is string => typeof item === 'string');
+    }
+  } catch {
+    if (typeof photosRaw === 'string' && photosRaw.trim().length > 0) {
+      return [photosRaw.trim()];
+    }
+  }
+  return undefined;
+}
+
+function serializePhotos(photos: string[] | undefined | null): string | null {
+  if (!photos || !Array.isArray(photos) || photos.length === 0) return null;
+  return JSON.stringify(photos);
+}
+
+function getSettingsFromFile(): AppSettings | null {
+  try {
+    if (fs.existsSync(SETTINGS_FILE_PATH)) {
+      const raw = fs.readFileSync(SETTINGS_FILE_PATH, 'utf-8');
+      return JSON.parse(raw) as AppSettings;
+    }
+  } catch (err) {
+    console.warn('Local settings file read warning:', err);
+  }
+  return null;
+}
+
+function saveSettingsToFile(settings: AppSettings): boolean {
+  try {
+    const dir = path.dirname(SETTINGS_FILE_PATH);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(SETTINGS_FILE_PATH, JSON.stringify(settings, null, 2), 'utf-8');
+    return true;
+  } catch (err) {
+    console.warn('Local settings file write warning:', err);
+    return false;
+  }
+}
 
 function getInitialDefaultState(): TrackerState {
   return JSON.parse(JSON.stringify(initialStateJson)) as TrackerState;
@@ -58,8 +106,13 @@ async function ensureTablesExist(db: NonNullable<ReturnType<typeof getDb>>): Pro
         district_id text PRIMARY KEY,
         is_visited boolean NOT NULL DEFAULT false,
         general_notes text,
+        photos text,
         updated_at timestamp NOT NULL DEFAULT NOW()
       );
+    `);
+
+    await db.execute(sql`
+      ALTER TABLE district_statuses ADD COLUMN IF NOT EXISTS photos text;
     `);
 
     await db.execute(sql`
@@ -70,7 +123,20 @@ async function ensureTablesExist(db: NonNullable<ReturnType<typeof getDb>>): Pro
         category text NOT NULL DEFAULT 'Other',
         visited_date text,
         notes text,
+        photos text,
         created_at timestamp NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await db.execute(sql`
+      ALTER TABLE places ADD COLUMN IF NOT EXISTS photos text;
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS app_settings (
+        key text PRIMARY KEY,
+        value text NOT NULL,
+        updated_at timestamp NOT NULL DEFAULT NOW()
       );
     `);
 
@@ -85,6 +151,77 @@ async function ensureTablesExist(db: NonNullable<ReturnType<typeof getDb>>): Pro
   } catch (err) {
     console.error('Error ensuring Postgres tables exist:', err);
   }
+}
+
+// ----------------------------------------------------
+// App Settings Getters & Mutators
+// ----------------------------------------------------
+export async function getAppSettings(): Promise<AppSettings> {
+  const db = getDb();
+  if (db) {
+    try {
+      await ensureTablesExist(db);
+      const rows = await db.select().from(appSettings).where(eq(appSettings.key, 'settings'));
+      if (rows.length > 0 && rows[0].value) {
+        const parsed = JSON.parse(rows[0].value);
+        const merged: AppSettings = { ...DEFAULT_APP_SETTINGS, ...parsed };
+        memorySettingsCache = merged;
+        return merged;
+      }
+    } catch (err) {
+      console.error('Postgres getAppSettings error:', err);
+    }
+  }
+
+  if (memorySettingsCache) {
+    return memorySettingsCache;
+  }
+
+  const fileSettings = getSettingsFromFile();
+  if (fileSettings) {
+    const merged: AppSettings = { ...DEFAULT_APP_SETTINGS, ...fileSettings };
+    memorySettingsCache = merged;
+    return merged;
+  }
+
+  memorySettingsCache = { ...DEFAULT_APP_SETTINGS };
+  saveSettingsToFile(memorySettingsCache);
+  return memorySettingsCache;
+}
+
+export async function saveAppSettings(settings: Partial<AppSettings>): Promise<AppSettings> {
+  const current = await getAppSettings();
+  const updated: AppSettings = {
+    ...current,
+    ...settings,
+  };
+
+  const db = getDb();
+  if (db) {
+    try {
+      await ensureTablesExist(db);
+      await db
+        .insert(appSettings)
+        .values({
+          key: 'settings',
+          value: JSON.stringify(updated),
+          updatedAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: appSettings.key,
+          set: {
+            value: JSON.stringify(updated),
+            updatedAt: new Date(),
+          },
+        });
+    } catch (err) {
+      console.error('Postgres saveAppSettings error:', err);
+    }
+  }
+
+  memorySettingsCache = updated;
+  saveSettingsToFile(updated);
+  return updated;
 }
 
 // ----------------------------------------------------
@@ -109,6 +246,7 @@ async function fetchStateFromPostgres(): Promise<TrackerState | null> {
           districtId: d.id,
           isVisited: Boolean(existing.isVisited),
           generalNotes: existing.generalNotes || null,
+          photos: serializePhotos(existing.photos),
         }).onConflictDoNothing();
 
         for (const p of existing.visitedPlaces || []) {
@@ -119,6 +257,7 @@ async function fetchStateFromPostgres(): Promise<TrackerState | null> {
             category: p.category,
             visitedDate: p.visitedDate,
             notes: p.notes,
+            photos: serializePhotos(p.photos),
           }).onConflictDoNothing();
         }
       }
@@ -146,18 +285,24 @@ async function fetchStateFromPostgres(): Promise<TrackerState | null> {
         if (status.generalNotes) {
           districtsMap[status.districtId].generalNotes = status.generalNotes;
         }
+        const parsedPhotos = parsePhotos(status.photos);
+        if (parsedPhotos && parsedPhotos.length > 0) {
+          districtsMap[status.districtId].photos = parsedPhotos;
+        }
       }
     }
 
     // Populate places
     for (const p of allPlaces) {
       if (districtsMap[p.districtId]) {
+        const parsedPlacePhotos = parsePhotos(p.photos);
         districtsMap[p.districtId].visitedPlaces.push({
           id: p.id,
           name: p.name,
           category: p.category as any,
           visitedDate: p.visitedDate || undefined,
           notes: p.notes || undefined,
+          photos: parsedPlacePhotos && parsedPlacePhotos.length > 0 ? parsedPlacePhotos : undefined,
         });
       }
     }
@@ -204,7 +349,7 @@ export async function fetchRawTrackerState(): Promise<TrackerState> {
 }
 
 // ----------------------------------------------------
-// Next.js Tagged Server Cache
+// Next.js Tag Server Cache
 // ----------------------------------------------------
 let cachedFetcher: (() => Promise<TrackerState>) | null = null;
 try {
@@ -283,6 +428,7 @@ export async function addPlaceToDistrict(
     category: placeInput.category || 'Other',
     visitedDate: placeInput.visitedDate || new Date().toISOString().split('T')[0],
     notes: placeInput.notes?.trim() || '',
+    photos: placeInput.photos && placeInput.photos.length > 0 ? placeInput.photos : undefined,
   };
 
   if (db) {
@@ -312,6 +458,7 @@ export async function addPlaceToDistrict(
         category: newPlace.category,
         visitedDate: newPlace.visitedDate,
         notes: newPlace.notes,
+        photos: serializePhotos(newPlace.photos),
       });
     } catch (err) {
       console.error('Postgres addPlaceToDistrict error:', err);
@@ -348,6 +495,7 @@ export async function updatePlaceInDistrict(
           category: placeData.category,
           visitedDate: placeData.visitedDate,
           notes: placeData.notes !== undefined ? placeData.notes.trim() : undefined,
+          photos: placeData.photos !== undefined ? serializePhotos(placeData.photos) : undefined,
         })
         .where(eq(places.id, placeId));
     } catch (err) {
@@ -363,6 +511,7 @@ export async function updatePlaceInDistrict(
           ...placeData,
           name: placeData.name !== undefined ? placeData.name.trim() : p.name,
           notes: placeData.notes !== undefined ? placeData.notes.trim() : p.notes,
+          photos: placeData.photos !== undefined ? placeData.photos : p.photos,
         };
       }
       return p;
@@ -427,6 +576,7 @@ export async function updateDistrictNotes(districtId: string, notes: string): Pr
         .values({
           districtId,
           generalNotes: notes,
+          photos: serializePhotos(districtData.photos),
           updatedAt: new Date(),
         })
         .onConflictDoUpdate({
@@ -442,6 +592,45 @@ export async function updateDistrictNotes(districtId: string, notes: string): Pr
   }
 
   districtData.generalNotes = notes;
+  state.districts[districtId] = districtData;
+  state.lastUpdated = new Date().toISOString();
+  memoryStateCache = state;
+  saveToFile(state);
+
+  return state;
+}
+
+export async function updateDistrictPhotos(
+  districtId: string,
+  photos: string[]
+): Promise<TrackerState> {
+  const db = getDb();
+  const state = await getTrackerState();
+  const districtData = state.districts[districtId] || { isVisited: false, visitedPlaces: [] };
+
+  if (db) {
+    try {
+      await ensureTablesExist(db);
+      await db
+        .insert(districtStatuses)
+        .values({
+          districtId,
+          photos: serializePhotos(photos),
+          updatedAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: districtStatuses.districtId,
+          set: {
+            photos: serializePhotos(photos),
+            updatedAt: new Date(),
+          },
+        });
+    } catch (err) {
+      console.error('Postgres updateDistrictPhotos error:', err);
+    }
+  }
+
+  districtData.photos = photos;
   state.districts[districtId] = districtData;
   state.lastUpdated = new Date().toISOString();
   memoryStateCache = state;
@@ -466,6 +655,7 @@ export async function resetTrackerState(): Promise<TrackerState> {
           districtId: d.id,
           isVisited: Boolean(existing.isVisited),
           generalNotes: existing.generalNotes || null,
+          photos: serializePhotos(existing.photos),
         });
 
         for (const p of existing.visitedPlaces || []) {
@@ -476,6 +666,7 @@ export async function resetTrackerState(): Promise<TrackerState> {
             category: p.category,
             visitedDate: p.visitedDate,
             notes: p.notes,
+            photos: serializePhotos(p.photos),
           });
         }
       }
@@ -506,6 +697,7 @@ export async function saveTrackerState(state: TrackerState): Promise<boolean> {
             districtId,
             isVisited: Boolean(d.isVisited),
             generalNotes: d.generalNotes || null,
+            photos: serializePhotos(d.photos),
             updatedAt: new Date(),
           })
           .onConflictDoUpdate({
@@ -513,6 +705,7 @@ export async function saveTrackerState(state: TrackerState): Promise<boolean> {
             set: {
               isVisited: Boolean(d.isVisited),
               generalNotes: d.generalNotes || null,
+              photos: serializePhotos(d.photos),
               updatedAt: new Date(),
             },
           });
@@ -528,6 +721,7 @@ export async function saveTrackerState(state: TrackerState): Promise<boolean> {
                 category: p.category || 'Other',
                 visitedDate: p.visitedDate || null,
                 notes: p.notes || null,
+                photos: serializePhotos(p.photos),
               })
               .onConflictDoUpdate({
                 target: places.id,
@@ -536,6 +730,7 @@ export async function saveTrackerState(state: TrackerState): Promise<boolean> {
                   category: p.category || 'Other',
                   visitedDate: p.visitedDate || null,
                   notes: p.notes || null,
+                  photos: serializePhotos(p.photos),
                 },
               });
           }

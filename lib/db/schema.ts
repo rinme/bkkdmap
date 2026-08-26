@@ -5,6 +5,7 @@ export const districtStatuses = pgTable('district_statuses', {
   districtId: text('district_id').primaryKey(),
   isVisited: boolean('is_visited').notNull().default(false),
   generalNotes: text('general_notes'),
+  photos: text('photos'),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
@@ -19,6 +20,7 @@ export const places = pgTable(
     category: text('category').notNull().default('Other'),
     visitedDate: text('visited_date'),
     notes: text('notes'),
+    photos: text('photos'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
   (table) => ({
@@ -26,6 +28,12 @@ export const places = pgTable(
     categoryIdx: index('places_category_idx').on(table.category),
   })
 );
+
+export const appSettings = pgTable('app_settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
 
 export const districtStatusesRelations = relations(districtStatuses, ({ many }) => ({
   places: many(places),
